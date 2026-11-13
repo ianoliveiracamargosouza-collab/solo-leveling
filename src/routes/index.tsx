@@ -96,7 +96,7 @@ function Index() {
           <div className="text-[8px] text-muted-foreground">{g.map.interior ? g.map.name : getMapDef(g.map.id).name} · Sombras {g.s.shadowArmy.length}/{g.shadowCapacity()}{g.active.length ? ` · x${comboStats(g.active).mult.toFixed(1)}` : ""}</div>
         </div>
         <div className="absolute right-2 top-2 z-10 flex flex-wrap justify-end gap-1">
-          {([["forms", "Habilidades"], ["inv", "Mochila"], ["train", "Treino"]] as const).map(([id, l]) => (
+          {([["forms", "Habilidades"], ["inv", "Mochila"], ["train", "Treino"], ["shadow", "Exército"]] as const).map(([id, l]) => (
             <button key={id} onClick={() => setPanel(panel === id ? null : id)} className="rounded border-2 border-border bg-card/85 px-2 py-1.5 text-[9px] hover:border-primary">{l}</button>))}
           {g.map.interior && <button onClick={() => setPanel(panel === "house" ? null : "house")} className="rounded border-2 border-border bg-card/85 px-2 py-1.5 text-[9px] hover:border-primary">Decorar</button>}
           <button onClick={() => { if (confirm("Apagar todo o progresso?")) { clearSave(); location.reload(); } }} className="rounded border-2 border-border bg-card/85 px-2 py-1.5 text-[9px] text-destructive">Reset</button>
