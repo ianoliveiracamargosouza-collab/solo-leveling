@@ -19,12 +19,12 @@ export class Game {
   constructor(s: SaveData) {
     this.s = s;
     this.loadMap(s.mapId, s.x > 0 ? s.x : undefined, s.y > 0 ? s.y : undefined);
-    this.msg("Bem-vindo, guerreiro Saiyajin!", "#ffb020");
+    this.msg("O Sistema foi ativado. Sobreviva à Masmorra Dupla, Sung Jin-Woo.", "#ffb020");
   }
   msg(t: string, c = "#ffffff") { this.log.unshift({ t, c }); if (this.log.length > 6) this.log.pop(); }
 
   loadMap(id: string, x?: number, y?: number) {
-    if (id.startsWith("casa:") && !this.s.houses[id.slice(5)]) id = "terra";
+    if (id.startsWith("casa:") && !this.s.houses[id.slice(5)]) id = "double-dungeon";
     let m = this.cache.get(id);
     if (!m) { m = id.startsWith("casa:") ? genInterior(id.slice(5)) : genMap(id); this.cache.set(id, m); }
     this.map = m; this.s.mapId = id;
@@ -46,7 +46,7 @@ export class Game {
   }
   private rollEnemy(e: Enemy) {
     e.rarity = e.boss ? "comum" : rollRarity();
-    const rm = RARITY_INFO[e.rarity].mult; const ps = this.map.id === "arena" ? 1 + 0.3 * this.s.prestige : 1;
+    const rm = RARITY_INFO[e.rarity].mult; const ps = this.map.id === "shadow-castle" ? 1 + 0.3 * this.s.prestige : 1;
     const phaseMult = Math.pow(2, this.s.phaseBoost);
     const b = enemyBase(e.def.level * phaseMult, e.boss);
     e.maxHp = e.hp = Math.round(b.hp * rm * ps); e.atk = Math.round(b.atk * (1 + (rm - 1) * 0.4) * ps); e.dfn = Math.round(b.def * ps);
@@ -98,7 +98,7 @@ export class Game {
       const chargeMultiplier = 4 + s.level * 0.05;
       s.ki = Math.max(0, s.ki - st.drain * dt + (this.chargingKi ? st.kiRegen * chargeMultiplier * dt : 0));
       if (s.ki <= 0) {
-        this.revert("Ki esgotado! Transformação desfeita.");
+        this.revert("Mana esgotada! Habilidade desativada.");
         st = this.stats(); // Immediately restore normal attributes for this frame.
       } else {
         const forms = this.active
@@ -117,7 +117,7 @@ export class Game {
       this.strain += dt;
       s.hp -= st.maxHp * 0.0015 * this.active.length * (1 + this.strain / 8) * dt;
       if (s.hp < st.maxHp * 0.1) {
-        this.revert("Seu corpo chegou ao limite! Combinação desfeita.");
+        this.revert("Seu corpo chegou ao limite! Habilidade desativada.");
         st = this.stats();
       }
     } else {
@@ -186,7 +186,7 @@ export class Game {
   private die() {
     const lost = Math.floor(this.s.xp * 0.1); this.s.xp -= lost;
     this.active = []; this.strain = 0; this.msg(`Você foi derrotado! Perdeu ${lost} XP.`, "#ff5555");
-    this.loadMap("terra"); const st = this.stats(); this.s.hp = st.maxHp; this.s.ki = st.maxKi;
+    this.loadMap("double-dungeon"); const st = this.stats(); this.s.hp = st.maxHp; this.s.ki = st.maxKi;
   }
 
   nearest(range: number) {
@@ -212,7 +212,7 @@ export class Game {
     }
     if (e.boss) {
       if (!this.s.bossesDefeated.includes(e.def.name)) this.s.bossesDefeated.push(e.def.name);
-      if (e.def.name === "Jiren") { this.s.prestige++; this.msg(`CAMPEÃO DO MULTIVERSO! Desafio da Arena agora nível ${this.s.prestige + 1}.`, "#ffb020"); }
+      if (e.def.name === "Bellion") { this.s.prestige++; this.msg(`MONARCA DAS SOMBRAS! Castelo do Monarca agora nível ${this.s.prestige + 1}.`, "#ffb020"); }
     }
     this.gainXp(e.xp);
   }
@@ -222,7 +222,7 @@ export class Game {
       this.s.xp -= xpToNext(this.s.level); this.s.level++;
       const st = this.stats(); this.s.hp = st.maxHp; this.s.ki = st.maxKi;
       this.s.trainPoints += 3; this.msg(`Subiu para o nível ${this.s.level}! +3 pontos de status`, "#ffb020");
-      const f = FORMS.find((f) => f.level === this.s.level); if (f) this.msg(`Nova transformação: ${f.name}!`, f.aura);
+      const f = FORMS.find((f) => f.level === this.s.level); if (f) this.msg(`Nova habilidade do Monarca: ${f.name}!`, f.aura);
     }
   }
 
@@ -233,12 +233,12 @@ export class Game {
   }
   blast() {
     this.chargingKi = false;
-    if (this.cd.blast > 0 || this.s.ki < 8) { if (this.s.ki < 8) this.msg("Ki insuficiente", "#7fd6ff"); return; }
+    if (this.cd.blast > 0 || this.s.ki < 8) { if (this.s.ki < 8) this.msg("Mana insuficiente", "#7fd6ff"); return; }
     this.cd.blast = 0.3; this.s.ki -= 8; this.fire(this.stats().atk * 1.4, 380, 6, "#7fd6ff", false, 1);
   }
   kame() {
     this.chargingKi = false;
-    if (this.cd.kame > 0 || this.s.ki < 35) { if (this.s.ki < 35) this.msg("Ki insuficiente para o Kamehameha", "#7fd6ff"); return; }
+    if (this.cd.kame > 0 || this.s.ki < 35) { if (this.s.ki < 35) this.msg("Mana insuficiente para a habilidade", "#7fd6ff"); return; }
     this.cd.kame = 2.5; this.s.ki -= 35; this.fire(this.stats().atk * 3.5, 420, 14, "#4fc3ff", true, 1.2);
   }
   private faceTo(e: Enemy) { const d = Math.hypot(e.x - this.s.x, e.y - this.s.y) || 1; this.facing = { x: (e.x - this.s.x) / d, y: (e.y - this.s.y) / d }; }
@@ -256,7 +256,7 @@ export class Game {
     const f = FORMS.find((f) => f.id === id)!;
     if (!wasOn) {
       for (let i = 0; i < 30; i++) { const a = Math.random() * 6.28; this.parts.push({ x: this.s.x, y: this.s.y, vx: Math.cos(a) * 140, vy: Math.sin(a) * 140, life: 0.5, color: f.aura, size: 3 }); }
-      this.msg(this.active.length > 1 ? `Combinação: ${this.active.map((a) => FORMS.find((f) => f.id === a)!.name).join(" + ")}` : `${f.name} ativado!`, f.aura);
+      this.msg(this.active.length > 1 ? `Habilidade ativa: ${this.active.map((a) => FORMS.find((f) => f.id === a)!.name).join(" + ")}` : `${f.name} ativada!`, f.aura);
     }
   }
   setChargingKi(value: boolean) { this.chargingKi = value && !this.moving; }
@@ -273,25 +273,25 @@ export class Game {
 
   phaseUpgradeCost() { return Math.round(1000 * Math.pow(2, this.s.phaseBoost)); }
   buyNextPhase() {
-    if (!this.s.bossesDefeated.includes("Jiren")) { this.msg("Derrote Jiren para liberar a evolução infinita das fases", "#ff7777"); return; }
+    if (!this.s.bossesDefeated.includes("Bellion")) { this.msg("Derrote Jiren para liberar a a progressão de ameaça", "#ff7777"); return; }
     const cost = this.phaseUpgradeCost();
     if (this.s.gold < cost) { this.msg("Faltam " + (cost - this.s.gold) + "z", "#ff7777"); return; }
     this.s.gold -= cost; this.s.phaseBoost++;
-    this.loadMap(this.map.interior ? "terra" : this.map.id);
-    this.msg("Fase " + (this.s.phaseBoost + 1) + ": força dos inimigos x" + Math.pow(2, this.s.phaseBoost) + " · XP x" + Math.pow(1.25, this.s.phaseBoost).toFixed(2), "#ffb020");
+    this.loadMap(this.map.interior ? "double-dungeon" : this.map.id);
+    this.msg("Fase " + (this.s.phaseBoost + 1) + ": força dos monstros x" + Math.pow(2, this.s.phaseBoost) + " · XP x" + Math.pow(1.25, this.s.phaseBoost).toFixed(2), "#ffb020");
     writeSave(this.s);
   }
 
   buySenzu() {
-    if (!this.map.interior) { this.msg("A Semente dos Deuses só pode ser comprada dentro da sua casa", "#ff7777"); return; }
+    if (!this.map.interior) { this.msg("A Poção de Recuperação só pode ser comprada dentro da sua casa", "#ff7777"); return; }
     const cost = 250;
     if (this.s.gold < cost) { this.msg("Faltam " + (cost - this.s.gold) + "z", "#ff7777"); return; }
-    this.s.gold -= cost; this.s.senzuBeans++; this.msg("Você comprou uma Semente dos Deuses!", "#9fe870");
+    this.s.gold -= cost; this.s.senzuBeans++; this.msg("Você comprou uma Poção de Recuperação!", "#9fe870");
   }
   useSenzu() {
-    if (this.s.senzuBeans <= 0) { this.msg("Você não tem Semente dos Deuses", "#ff7777"); return; }
+    if (this.s.senzuBeans <= 0) { this.msg("Você não tem Poção de Recuperação", "#ff7777"); return; }
     const st = this.stats(); this.s.senzuBeans--; this.s.hp = st.maxHp; this.s.ki = st.maxKi;
-    this.msg("Semente dos Deuses usada: Vida e Ki restaurados!", "#9fe870");
+    this.msg("Poção de Recuperação usada: Vida e Mana restaurada!", "#9fe870");
   }
 
   travel(mapId: string) {
@@ -320,8 +320,8 @@ export class Game {
   }
   enterHouse(id: string) { if (!this.s.houses[id]) return; this.loadMap("casa:" + id); }
   exitHouse() {
-    const id = this.map.interior; const d = id && genMap("terra").doors.find((d) => d.houseId === id);
-    this.loadMap("terra", d ? d.x * TILE + 16 : undefined, d ? (d.y + 1) * TILE + 16 : undefined);
+    const id = this.map.interior; const d = id && genMap("double-dungeon").doors.find((d) => d.houseId === id);
+    this.loadMap("double-dungeon", d ? d.x * TILE + 16 : undefined, d ? (d.y + 1) * TILE + 16 : undefined);
   }
   get house() { return this.map.interior ? this.s.houses[this.map.interior] : undefined; }
   store(uid: string) {
