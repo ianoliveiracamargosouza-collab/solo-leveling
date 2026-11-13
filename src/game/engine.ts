@@ -131,6 +131,7 @@ export class Game {
     for (const key of Object.keys(this.cd) as (keyof typeof this.cd)[]) this.cd[key] = Math.max(0, this.cd[key] - dt);
     this.punchT = Math.max(0, this.punchT - dt);
     this.updateEnemies(dt, st.def);
+    this.updateShadows(dt);
     this.updateProjs(dt, st.def);
     for (const t of this.texts) { t.y -= 24 * dt; t.life -= dt; } this.texts = this.texts.filter((t) => t.life > 0);
     for (const p of this.parts) { p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt; } this.parts = this.parts.filter((p) => p.life > 0);
@@ -292,6 +293,16 @@ export class Game {
     this.corpses = this.corpses.filter((x) => x.id !== corpseId);
     this.msg(`${shadow.name} foi adicionada ao Exército das Sombras!`, "#a78bfa");
     this.s.shadowsSummoned = true; writeSave(this.s); return true;
+  }
+
+  dismissShadow(shadowId: string) {
+    const index = this.s.shadowArmy.findIndex((shadow) => shadow.id === shadowId);
+    if (index < 0) return false;
+    const [removed] = this.s.shadowArmy.splice(index, 1);
+    if (this.s.shadowArmy.length === 0) this.s.shadowsSummoned = false;
+    this.msg(`${removed!.name} foi expulsa do Exército das Sombras.`, "#a78bfa");
+    writeSave(this.s);
+    return true;
   }
 
   setShadowCommand(command: ShadowCommand) {
