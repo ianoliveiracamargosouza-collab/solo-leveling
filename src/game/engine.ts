@@ -1,17 +1,17 @@
 // Core simulation: movement, combat, enemies, progression, transformations, houses.
 import { DECOR, FORMS, HOUSES, RARITY_INFO, comboStats, enemyBase, getMapDef, makeItem, rollRarity, toggleForm, xpToNext, type EnemyDef, type Item, type Rarity, type Slot } from "./data";
-import { writeSave, type SaveData } from "./state";
+import { writeSave, type SaveData, type ShadowUnit, type ShadowCommand } from "./state";
 import { T, TILE, collides, genInterior, genMap, tileAt, type GameMap } from "./world";
 
 export interface Enemy { id: number; def: EnemyDef; boss: boolean; rarity: Rarity; x: number; y: number; hx: number; hy: number; hp: number; maxHp: number; atk: number; dfn: number; xp: number; gold: number; alive: boolean; respawnAt: number; atkCd: number; specialCd: number; flash: number; wander: { x: number; y: number; t: number } }
 interface Proj { x: number; y: number; vx: number; vy: number; dmg: number; r: number; from: "p" | "e"; life: number; color: string; pierce: boolean; hit: Set<number> }
 interface FText { x: number; y: number; text: string; color: string; life: number }
 interface Part { x: number; y: number; vx: number; vy: number; life: number; color: string; size: number }
-export type Ctx = { type: "portal" } | { type: "door"; houseId: string } | { type: "exit" } | { type: "chest" } | null;
+export interface Corpse { id: number; name: string; x: number; y: number; level: number; boss: boolean; rank: string; attempted: boolean }\nexport type Ctx = { type: "portal" } | { type: "door"; houseId: string } | { type: "exit" } | { type: "chest" } | { type: "corpse"; corpseId: number } | null;
 const HALF = 9;
 
 export class Game {
-  s: SaveData; map!: GameMap; enemies: Enemy[] = []; projs: Proj[] = []; texts: FText[] = []; parts: Part[] = [];
+  s: SaveData; map!: GameMap; enemies: Enemy[] = []; corpses: Corpse[] = []; projs: Proj[] = []; texts: FText[] = []; parts: Part[] = [];
   time = 0; keys = new Set<string>(); joy = { x: 0, y: 0 }; facing = { x: 0, y: 1 }; moving = false; chargingKi = false; animT = 0; punchT = 0;
   cd = { punch: 0, blast: 0, kame: 0, train: 0 }; active: string[] = []; strain = 0;
   log: { t: string; c: string }[] = []; context: Ctx = null; private saveT = 0; private nextId = 1; private cache = new Map<string, GameMap>();
@@ -30,7 +30,7 @@ export class Game {
     this.map = m; this.s.mapId = id;
     this.s.x = x ?? m.spawn.x * TILE + 16; this.s.y = y ?? m.spawn.y * TILE + 16;
     if (collides(m, this.s.x, this.s.y, HALF)) { this.s.x = m.spawn.x * TILE + 16; this.s.y = m.spawn.y * TILE + 16; }
-    this.projs = []; this.enemies = [];
+    this.projs = []; this.enemies = []; this.corpses = [];
     if (!m.interior) this.spawnEnemies();
   }
 
@@ -91,7 +91,7 @@ export class Game {
     if (tile === T.PORTAL) this.context = { type: "portal" };
     else if (tile === T.DOOR) { const d = this.map.doors.find((d) => d.x === tx && d.y === ty); if (d) this.context = { type: "door", houseId: d.houseId }; }
     else if (tile === T.EXIT) this.context = { type: "exit" };
-    else if (this.map.interior && ty <= 2 && Math.abs(tx - Math.floor(this.map.w / 2)) <= 1) this.context = { type: "chest" };
+    else if (this.map.interior && ty <= 2 && Math.abs(tx - Math.floor(this.map.w / 2)) <= 1) this.context = { type: "chest" };\n    else { const corpse = this.nearestCorpse(48); if (corpse) this.context = { type: "corpse", corpseId: corpse.id }; }
     // Ki, forms, strain. Never read aura data after a depletion-triggered revert.
     const wasTransformed = this.active.length > 0;
     if (wasTransformed) {
@@ -202,7 +202,7 @@ export class Game {
     if (e.hp <= 0) this.kill(e);
   }
   private kill(e: Enemy) {
-    e.alive = false; e.respawnAt = this.time + (e.boss ? 90 : 12);
+    e.alive = false; e.respawnAt = this.time + (e.boss ? 90 : 12);\n    this.corpses.push({ id: e.id, name: e.def.name, x: e.x, y: e.y, level: e.def.level, boss: e.boss, rank: this.currentRank(), attempted: false });
     this.s.gold += e.gold; this.msg(`${e.def.name} derrotado! +${e.xp} XP, +${e.gold}z`, "#9fe870");
     for (let i = 0; i < 14; i++) { const a = Math.random() * 6.28; this.parts.push({ x: e.x, y: e.y, vx: Math.cos(a) * 90, vy: Math.sin(a) * 90, life: 0.5, color: e.def.color, size: 3 }); }
     if (e.boss || Math.random() < 0.3 + (e.rarity !== "comum" ? 0.3 : 0)) {
@@ -214,7 +214,7 @@ export class Game {
       if (!this.s.bossesDefeated.includes(e.def.name)) this.s.bossesDefeated.push(e.def.name);
       if (e.def.name === "Bellion") { this.s.prestige++; this.msg(`MONARCA DAS SOMBRAS! Castelo do Monarca agora nível ${this.s.prestige + 1}.`, "#ffb020"); }
     }
-    this.gainXp(e.xp);
+    this.gainXp(e.xp);\n    this.gainShadowXp(Math.max(1, Math.floor(e.xp * 0.2)));
   }
   gainXp(x: number) {
     this.s.xp += x;
@@ -226,7 +226,122 @@ export class Game {
     }
   }
 
-  punch() {
+
+  private currentRank() {
+    const id = this.map.id;
+    if (id === "dungeon-s" || id === "shadow-castle") return "S";
+    if (id === "dungeon-a") return "A";
+    if (id === "dungeon-b") return "B";
+    if (id === "dungeon-c") return "C";
+    if (id === "dungeon-d") return "D";
+    return "E";
+  }
+
+  nearestCorpse(range: number) {
+    let best: Corpse | null = null, bd = range;
+    for (const corpse of this.corpses) {
+      const d = Math.hypot(corpse.x - this.s.x, corpse.y - this.s.y);
+      if (d < bd) { bd = d; best = corpse; }
+    }
+    return best;
+  }
+
+  extractionChance(corpse: Corpse) {
+    if (["Igris", "Beru", "Bellion", "Arquiteto"].includes(corpse.name)) return corpse.name === "Igris" ? 0.25 : corpse.name === "Beru" ? 0.15 : corpse.name === "Bellion" ? 0.05 : 0.1;
+    if (corpse.boss) return corpse.rank === "S" ? 0.15 : corpse.rank === "A" ? 0.3 : 0.45;
+    if (corpse.rank === "S") return 0.45;
+    if (corpse.rank === "A") return 0.5;
+    if (corpse.rank === "B") return 0.6;
+    if (corpse.level >= 12) return 0.65;
+    return 0.8;
+  }
+
+  shadowCapacity() { return Math.min(20, 3 + Math.floor(this.s.level / 5) + this.s.prestige); }
+
+  extractShadow(corpseId: number) {
+    const corpse = this.corpses.find((x) => x.id === corpseId);
+    if (!corpse || corpse.attempted) { this.msg("Este corpo já não pode ser extraído.", "#ff7777"); return false; }
+    if (this.s.shadowArmy.length >= this.shadowCapacity()) { this.msg(`Exército cheio! Limite atual: ${this.shadowCapacity()} sombras.`, "#ff7777"); return false; }
+    if (["Igris", "Beru", "Bellion", "Arquiteto"].includes(corpse.name) && this.s.shadowArmy.some((x) => x.name === corpse.name)) {
+      this.msg(`${corpse.name} já faz parte do seu exército.`, "#ff7777"); corpse.attempted = true; return false;
+    }
+    corpse.attempted = true;
+    const chance = this.extractionChance(corpse);
+    if (Math.random() > chance) {
+      this.msg(`A extração de ${corpse.name} falhou (${Math.round(chance * 100)}% de chance). O corpo permaneceu.`, "#a78bfa");
+      return false;
+    }
+    const unique = ["Igris", "Beru", "Bellion", "Arquiteto"].includes(corpse.name);
+    const kind: ShadowUnit["kind"] = corpse.name === "Beru" ? "assassin" : corpse.name === "Tusk" ? "mage" : corpse.name === "Iron" || /golem|orc/i.test(corpse.name) ? "tank" : corpse.name === "Bellion" ? "elite" : "warrior";
+    const shadow: ShadowUnit = {
+      id: `shadow-${corpse.id}-${Date.now()}`, name: unique ? corpse.name : `Sombra de ${corpse.name}`,
+      rank: corpse.rank, level: Math.max(1, corpse.level), xp: 0,
+      maxHp: Math.round(80 + corpse.level * (kind === "tank" ? 24 : 16)),
+      hp: Math.round(80 + corpse.level * (kind === "tank" ? 24 : 16)),
+      atk: Math.round(6 + corpse.level * (kind === "assassin" ? 5 : kind === "mage" ? 4.5 : 4)),
+      def: Math.round(3 + corpse.level * (kind === "tank" ? 3 : 2)),
+      x: this.s.x + (Math.random() - 0.5) * 42, y: this.s.y + 26, cooldown: 0, kind,
+    };
+    this.s.shadowArmy.push(shadow);
+    this.corpses = this.corpses.filter((x) => x.id !== corpseId);
+    this.msg(`${shadow.name} foi adicionada ao Exército das Sombras!`, "#a78bfa");
+    this.s.shadowsSummoned = true; writeSave(this.s); return true;
+  }
+
+  setShadowCommand(command: ShadowCommand) {
+    this.s.shadowCommand = command;
+    const names: Record<ShadowCommand, string> = { follow: "Seguir", attack: "Atacar", defend: "Defender", focus: "Focar alvo" };
+    this.msg(`Comando do exército: ${names[command]}.`, "#a78bfa"); writeSave(this.s);
+  }
+
+  toggleShadows() {
+    if (!this.s.shadowArmy.length) { this.msg("Seu exército ainda está vazio. Extraia uma sombra primeiro.", "#ff7777"); return; }
+    this.s.shadowsSummoned = !this.s.shadowsSummoned;
+    this.msg(this.s.shadowsSummoned ? "Exército das Sombras invocado!" : "Exército das Sombras recolhido.", "#a78bfa");
+    writeSave(this.s);
+  }
+
+  private gainShadowXp(amount: number) {
+    for (const shadow of this.s.shadowArmy) {
+      shadow.xp += amount;
+      while (shadow.xp >= shadow.level * 35) {
+        shadow.xp -= shadow.level * 35; shadow.level++;
+        shadow.maxHp += shadow.kind === "tank" ? 24 : 16; shadow.hp = shadow.maxHp;
+        shadow.atk += shadow.kind === "assassin" ? 5 : 4; shadow.def += shadow.kind === "tank" ? 3 : 2;
+        this.msg(`${shadow.name} evoluiu para o nível ${shadow.level}!`, "#a78bfa");
+      }
+    }
+  }
+
+  private updateShadows(dt: number) {
+    if (!this.s.shadowsSummoned || this.map.interior) return;
+    for (const shadow of this.s.shadowArmy) {
+      shadow.cooldown = Math.max(0, shadow.cooldown - dt);
+      let target: Enemy | null = null, best = Infinity;
+      for (const enemy of this.enemies) {
+        if (!enemy.alive) continue;
+        const d = Math.hypot(enemy.x - shadow.x, enemy.y - shadow.y);
+        const fromPlayer = Math.hypot(enemy.x - this.s.x, enemy.y - this.s.y);
+        const limit = this.s.shadowCommand === "defend" || this.s.shadowCommand === "follow" ? 150 : this.s.shadowCommand === "focus" ? 520 : 420;
+        if (fromPlayer > limit && this.s.shadowCommand !== "attack") continue;
+        if (d < best) { best = d; target = enemy; }
+      }
+      if (target) {
+        const dx = target.x - shadow.x, dy = target.y - shadow.y, d = Math.hypot(dx, dy) || 1;
+        const reach = shadow.kind === "mage" ? 92 : 28;
+        if (d > reach) this.moveBody(shadow, dx / d * (shadow.kind === "assassin" ? 145 : 105) * dt, dy / d * (shadow.kind === "assassin" ? 145 : 105) * dt, 7);
+        else if (shadow.cooldown <= 0) {
+          shadow.cooldown = shadow.kind === "assassin" ? 0.55 : shadow.kind === "mage" ? 1.2 : 0.85;
+          this.hitEnemy(target, shadow.atk * (shadow.kind === "elite" ? 1.35 : 1));
+          if (shadow.kind === "mage") this.parts.push({ x: target.x, y: target.y, vx: 0, vy: -25, life: 0.35, color: "#a78bfa", size: 7 });
+        }
+      } else {
+        const dx = this.s.x - shadow.x, dy = this.s.y - shadow.y, d = Math.hypot(dx, dy);
+        if (d > 42) this.moveBody(shadow, dx / d * 115 * dt, dy / d * 115 * dt, 7);
+      }
+    }
+  }
+\n  punch() {
     this.chargingKi = false;
     if (this.cd.punch > 0) return; this.cd.punch = 0.35; this.punchT = 0.15;
     const e = this.nearest(48); if (e) { this.faceTo(e); this.hitEnemy(e, this.stats().atk); }
