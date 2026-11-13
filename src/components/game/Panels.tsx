@@ -23,7 +23,7 @@ function ItemLine({ it, children }: { it: Item; children?: ReactNode }) {
 export function Panel({ id, g, close }: { id: PanelId; g: Game; close: () => void }) {
   if (!id) return null;
   const s = g.s; const st = g.stats();
-  const titles: Record<string, string> = { forms: "Habilidades do Monarca", inv: "Mochila & Equipamento", train: "Atributos & Treino", travel: "Viajar (Portal)", house: "Casa", chest: "Baú" };
+  const titles: Record<string, string> = { forms: "Habilidades do Monarca", inv: "Mochila & Equipamento", train: "Atributos & Treino", travel: "Portais e Masmorras", house: "Refúgio", chest: "Baú" };
   let body: ReactNode = null;
   if (id === "forms") {
     const cs = comboStats(g.active);
@@ -40,7 +40,7 @@ export function Panel({ id, g, close }: { id: PanelId; g: Game; close: () => voi
             <span className="text-muted-foreground">{un ? `x${f.mult} · ${f.kiDrain}Mana/s` : `Nv ${f.level}`}</span>
           </button>); })}
       </div>
-      <div className="mt-3 text-[9px] leading-relaxed text-muted-foreground">Habilidades disponíveis: {VALID_COMBOS.map((c) => c.map((id) => FORMS.find((f) => f.id === id)!.short).join("+")).join(", ")}. Ative uma habilidade do Monarca para aumentar seu poder. O uso contínuo consome mana.</div>
+      <div className="mt-3 text-[9px] leading-relaxed text-muted-foreground">As habilidades do Monarca aumentam temporariamente seu poder e consomem mana enquanto estiverem ativas.</div>
     </>);
   }
   if (id === "inv") body = (<>
@@ -61,7 +61,7 @@ export function Panel({ id, g, close }: { id: PanelId; g: Game; close: () => voi
       <div key={k} className="mb-1.5 flex items-center justify-between text-[10px]">
         <span>{{ str: "Força", def: "Defesa", hp: "Vida", ki: "Mana" }[k]}: {s.train[k]}</span><Btn disabled={s.trainPoints <= 0} onClick={() => g.train(k)}>+1 ponto</Btn>
       </div>))}
-    <div className="mt-3 border-t border-border pt-2 text-[9px] text-muted-foreground">Chefes derrotados: {s.bossesDefeated.join(", ") || "nenhum"}<br/>Fase infinita: {s.phaseBoost + 1} · Força dos inimigos x{Math.pow(2, s.phaseBoost)} · XP x{Math.pow(1.25, s.phaseBoost).toFixed(2)} {s.bossesDefeated.includes("Bellion") && <Btn onClick={() => g.buyNextPhase()}>Dobrar fase — {g.phaseUpgradeCost()}z</Btn>}</div>
+    <div className="mt-3 border-t border-border pt-2 text-[9px] text-muted-foreground">Chefes derrotados: {s.bossesDefeated.join(", ") || "nenhum"}<br/>Ameaça do portal: {s.phaseBoost + 1} · Força dos inimigos x{Math.pow(2, s.phaseBoost)} · XP x{Math.pow(1.25, s.phaseBoost).toFixed(2)} {s.bossesDefeated.includes("Bellion") && <Btn onClick={() => g.buyNextPhase()}>Aumentar ameaça — {g.phaseUpgradeCost()}z</Btn>}</div>
   </>);
   if (id === "travel") body = (<div className="grid gap-1.5">
     {MAPS.map((m) => <button key={m.id} disabled={s.level < m.level} onClick={() => { if (g.travel(m.id)) close(); }}
