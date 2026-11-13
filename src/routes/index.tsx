@@ -70,12 +70,12 @@ function Index() {
     if (c.type === "portal") setPanel("travel");
     else if (c.type === "door") { if (g.s.houses[c.houseId]) g.enterHouse(c.houseId); else setPanel("house"); }
     else if (c.type === "exit") g.exitHouse();
-    else if (c.type === "chest") setPanel("chest");
+    else if (c.type === "chest") setPanel("chest");\n    else if (c.type === "corpse") g.extractShadow(c.corpseId);
   }
 
   const g = gref.current;
   const st = g?.stats();
-  const ctxLabel = g?.context ? { portal: "Viajar", door: g.context.type === "door" && g.s.houses[g.context.houseId] ? "Entrar" : "Comprar casa", exit: "Sair", chest: "Abrir baú" }[g.context.type] : null;
+  const ctxLabel = g?.context ? { portal: "Viajar", door: g.context.type === "door" && g.s.houses[g.context.houseId] ? "Entrar" : "Comprar casa", exit: "Sair", chest: "Abrir baú", corpse: "ERGUE-SE" }[g.context.type] : null;
   const ActBtn = ({ label, onPress, cd, big }: { label: string; onPress: () => void; cd?: number; big?: boolean }) => (
     <button onPointerDown={(e) => { e.preventDefault(); onPress(); }}
       className={`relative touch-none select-none rounded-full border-2 border-primary bg-primary/30 text-[9px] text-foreground active:bg-primary/70 ${big ? "h-20 w-20" : "h-14 w-14"}`}>
@@ -92,7 +92,7 @@ function Index() {
           <Bar v={g.s.hp} max={st.maxHp} color="var(--hp)" label={`${Math.ceil(g.s.hp)}/${st.maxHp}`} />
           <Bar v={g.s.ki} max={st.maxKi} color="var(--ki)" label={`Mana ${Math.floor(g.s.ki)}/${st.maxKi}`} />
           <Bar v={g.s.xp} max={xpToNext(g.s.level)} color="var(--xp)" label={`XP ${g.s.xp}/${xpToNext(g.s.level)}`} />
-          <div className="text-[8px] text-muted-foreground">{g.map.interior ? g.map.name : getMapDef(g.map.id).name}{g.active.length ? ` · x${comboStats(g.active).mult.toFixed(1)}` : ""}</div>
+          <div className="text-[8px] text-muted-foreground">{g.map.interior ? g.map.name : getMapDef(g.map.id).name} · Sombras {g.s.shadowArmy.length}/{g.shadowCapacity()}{g.active.length ? ` · x${comboStats(g.active).mult.toFixed(1)}` : ""}</div>
         </div>
         <div className="absolute right-2 top-2 z-10 flex flex-wrap justify-end gap-1">
           {([["forms", "Habilidades"], ["inv", "Mochila"], ["train", "Treino"]] as const).map(([id, l]) => (
