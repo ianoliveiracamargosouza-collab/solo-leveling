@@ -251,7 +251,7 @@ export class Game {
   }
 
   extractionChance(corpse: Corpse) {
-    if (["Igris", "Beru", "Bellion", "Arquiteto"].includes(corpse.name)) return corpse.name === "Igris" ? 0.25 : corpse.name === "Beru" ? 0.15 : corpse.name === "Bellion" ? 0.05 : 0.1;
+    if (["Igris", "Beru", "Bellion", "Arquiteto", "Iron", "Tusk"].includes(corpse.name)) return corpse.name === "Igris" ? 0.25 : corpse.name === "Beru" ? 0.15 : corpse.name === "Bellion" ? 0.05 : corpse.name === "Tusk" ? 0.2 : 0.25;
     if (corpse.boss) return corpse.rank === "S" ? 0.15 : corpse.rank === "A" ? 0.3 : 0.45;
     if (corpse.rank === "S") return 0.45;
     if (corpse.rank === "A") return 0.5;
