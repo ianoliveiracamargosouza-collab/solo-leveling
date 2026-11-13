@@ -79,21 +79,22 @@ function drawCorpse(c: CanvasRenderingContext2D, corpse: Game["corpses"][number]
   c.restore();
   c.font = `6px ${FONT}`; c.textAlign = "center"; c.fillStyle = "#000"; c.fillText(corpse.name, corpse.x + 1, corpse.y - 24 + 1);
   c.fillStyle = "#e9d5ff"; c.fillText(corpse.name, corpse.x, corpse.y - 24);
-  if (!corpse.attempted) {
+  if (!corpse.attempted && corpse.attempts < 3) {
     const pulse = 0.65 + Math.sin(Date.now() / 220) * 0.25;
-    c.globalAlpha = pulse; c.fillStyle = "#a78bfa"; c.font = `7px ${FONT}`; c.fillText("ERGUE-SE", corpse.x, corpse.y - 34); c.globalAlpha = 1;
+    c.globalAlpha = pulse; c.fillStyle = "#a78bfa"; c.font = `7px ${FONT}`; c.fillText(`ERGUE-SE ${corpse.attempts}/3`, corpse.x, corpse.y - 34); c.globalAlpha = 1;
   }
 }
 
 function drawShadow(c: CanvasRenderingContext2D, shadow: Game["s"]["shadowArmy"][number], time: number) {
-  c.save(); c.translate(shadow.x, shadow.y + Math.sin(time * 5 + shadow.level) * 1.2);
-  c.fillStyle = "rgba(0,0,0,0.35)"; c.beginPath(); c.ellipse(0, 12, 10, 3, 0, 0, 6.28); c.fill();
-  c.fillStyle = "#08080b";
-  c.fillRect(-6, -8, 12, 17); c.fillRect(-5, -18, 10, 10); c.fillRect(-9, -7, 4, 11); c.fillRect(5, -7, 4, 11); c.fillRect(-5, 8, 4, 5); c.fillRect(1, 8, 4, 5);
-  c.fillStyle = "#a78bfa"; c.fillRect(-3, -14, 2, 2); c.fillRect(1, -14, 2, 2);
-  c.globalAlpha = 0.55; c.strokeStyle = "#8b5cf6"; c.lineWidth = 1; c.strokeRect(-8, -20, 16, 34);
+  const size = shadow.size ?? 1;
+  c.save(); c.translate(shadow.x, shadow.y + Math.sin(time * 5 + shadow.level) * 1.2); c.scale(size, size);
+  c.fillStyle = "rgba(0,0,0,0.45)"; c.beginPath(); c.ellipse(0, 12, 12, 4, 0, 0, 6.28); c.fill();
+  drawLook(c, lookFor(shadow.appearanceName ?? shadow.name.replace(/^Sombra de /, "")), time * 10, false);
+  c.globalCompositeOperation = "source-atop"; c.fillStyle = "#050507"; c.fillRect(-24, -36, 48, 54);
+  c.globalCompositeOperation = "source-over"; c.fillStyle = "#c4b5fd"; c.fillRect(-4, -15, 2, 2); c.fillRect(2, -15, 2, 2);
+  c.globalAlpha = 0.55; c.strokeStyle = "#8b5cf6"; c.lineWidth = 1; c.strokeRect(-13, -30, 26, 44);
   c.restore(); c.globalAlpha = 1;
-  c.font = `6px ${FONT}`; c.textAlign = "center"; c.fillStyle = "#c4b5fd"; c.fillText(shadow.name, shadow.x, shadow.y - 24);
+  c.font = `6px ${FONT}`; c.textAlign = "center"; c.fillStyle = "#c4b5fd"; c.fillText(shadow.name, shadow.x, shadow.y - 24 * size);
 }
 
 function drawEnemy(c: CanvasRenderingContext2D, e: Enemy, time: number) {
