@@ -15,7 +15,7 @@ export class Game {
   s: SaveData; map!: GameMap; enemies: Enemy[] = []; corpses: Corpse[] = []; projs: Proj[] = []; texts: FText[] = []; parts: Part[] = [];
   time = 0; keys = new Set<string>(); joy = { x: 0, y: 0 }; facing = { x: 0, y: 1 }; moving = false; chargingKi = false; animT = 0; punchT = 0;
   cd = { punch: 0, blast: 0, kame: 0, train: 0 }; active: string[] = []; strain = 0;
-  log: { t: string; c: string }[] = []; context: Ctx = null; private saveT = 0; private nextId = 1; private cache = new Map<string, GameMap>();
+  log: { t: string; c: string }[] = []; context: Ctx = null; private saveT = 0; private nextId = 1; private nextCorpseId = 1; private cache = new Map<string, GameMap>();
 
   constructor(s: SaveData) {
     this.s = s;
@@ -205,7 +205,7 @@ export class Game {
   }
   private kill(e: Enemy) {
     e.alive = false; e.respawnAt = this.time + (e.boss ? 90 : 12);
-    this.corpses.push({ id: e.id, name: e.def.name, x: e.x, y: e.y, level: e.def.level, boss: e.boss, rank: this.currentRank(), attempted: false });
+    this.corpses.push({ id: this.nextCorpseId++, name: e.def.name, x: e.x, y: e.y, level: e.def.level, boss: e.boss, rank: this.currentRank(), attempted: false });
     this.s.gold += e.gold; this.msg(`${e.def.name} derrotado! +${e.xp} XP, +${e.gold}z`, "#9fe870");
     for (let i = 0; i < 14; i++) { const a = Math.random() * 6.28; this.parts.push({ x: e.x, y: e.y, vx: Math.cos(a) * 90, vy: Math.sin(a) * 90, life: 0.5, color: e.def.color, size: 3 }); }
     if (e.boss || Math.random() < 0.3 + (e.rarity !== "comum" ? 0.3 : 0)) {
