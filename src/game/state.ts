@@ -1,7 +1,7 @@
 // Persistent player save (localStorage).
 import type { Item, Slot } from "./data";
 export interface HouseState { decor: { type: string; x: number; y: number }[]; chest: Item[] }
-export interface ShadowUnit { id: string; name: string; rank: string; level: number; xp: number; hp: number; maxHp: number; atk: number; def: number; kind: "warrior" | "assassin" | "tank" | "mage" | "elite" }
+export interface ShadowUnit { id: string; name: string; rank: string; level: number; xp: number; hp: number; maxHp: number; atk: number; def: number; x: number; y: number; cooldown: number; kind: "warrior" | "assassin" | "tank" | "mage" | "elite" }
 export type ShadowCommand = "follow" | "attack" | "defend" | "focus";
 export interface SaveData {
   version: 1; name: string; level: number; xp: number; gold: number; hp: number; ki: number;
