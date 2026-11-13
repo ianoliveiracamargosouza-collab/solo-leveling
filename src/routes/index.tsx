@@ -70,7 +70,8 @@ function Index() {
     if (c.type === "portal") setPanel("travel");
     else if (c.type === "door") { if (g.s.houses[c.houseId]) g.enterHouse(c.houseId); else setPanel("house"); }
     else if (c.type === "exit") g.exitHouse();
-    else if (c.type === "chest") setPanel("chest");\n    else if (c.type === "corpse") g.extractShadow(c.corpseId);
+    else if (c.type === "chest") setPanel("chest");
+    else if (c.type === "corpse") g.extractShadow(c.corpseId);
   }
 
   const g = gref.current;
