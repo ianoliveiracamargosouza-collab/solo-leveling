@@ -43,6 +43,16 @@ describe("Exército das Sombras", () => {
     expect(save.shadowsSummoned).toBe(true);
   });
 
+  it("expulsa uma sombra ao removê-la do menu e salva a alteração", () => {
+    const save = defaultSave();
+    const game = new Game(save);
+    save.shadowArmy.push({ id: "remove-me", name: "Sombra de Goblin", rank: "E", level: 1, xp: 0, hp: 96, maxHp: 96, atk: 10, def: 5, x: save.x, y: save.y, cooldown: 0, kind: "warrior" });
+    expect(game.dismissShadow("remove-me")).toBe(true);
+    expect(save.shadowArmy).toHaveLength(0);
+    expect(save.shadowsSummoned).toBe(false);
+    expect(game.dismissShadow("remove-me")).toBe(false);
+  });
+
   it("aumenta o limite de sombras com nível e prestígio", () => {
     const save = defaultSave();
     const game = new Game(save);
