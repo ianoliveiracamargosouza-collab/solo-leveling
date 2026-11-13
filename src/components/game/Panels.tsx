@@ -69,12 +69,12 @@ export function Panel({ id, g, close }: { id: PanelId; g: Game; close: () => voi
     </div>
     <div className="mb-1 text-[10px] text-primary">Membros do exército</div>
     {s.shadowArmy.length === 0 && <div className="rounded border border-dashed border-border p-3 text-center text-[9px] text-muted-foreground">Nenhuma sombra recrutada. Derrote um inimigo e aproxime-se do corpo para usar ERGUE-SE.</div>}
-    {s.shadowArmy.map((shadow) => <div key={shadow.id} className="mb-2 rounded border border-border bg-secondary/60 p-2">
-      <div className="flex items-center justify-between text-[10px]"><strong className="text-primary">{shadow.name}</strong><span>Rank {shadow.rank} · Nv {shadow.level}</span></div>
+    {s.shadowArmy.map((shadow) => <button key={shadow.id} type="button" onClick={() => { if (confirm(`Expulsar ${shadow.name} do seu Exército das Sombras?`)) g.dismissShadow(shadow.id); }} className="mb-2 block w-full rounded border border-border bg-secondary/60 p-2 text-left transition-colors hover:border-destructive hover:bg-destructive/10" title={`Toque para expulsar ${shadow.name}`}>
+      <div className="flex items-center justify-between text-[10px]"><strong className="flex items-center gap-1.5 text-primary"><span aria-hidden="true" className="inline-block h-3 w-3 rounded-sm border border-violet-300 bg-zinc-950 shadow-[0_0_6px_#8b5cf6]" />{shadow.name}</strong><span>Rank {shadow.rank} · Nv {shadow.level}</span></div>
       <div className="mt-1 text-[9px] text-muted-foreground">HP {shadow.hp}/{shadow.maxHp} · ATQ {shadow.atk} · DEF {shadow.def}</div>
       <div className="mt-1 h-1.5 overflow-hidden rounded bg-background"><div className="h-full bg-violet-500" style={{ width: `${Math.min(100, shadow.xp / (shadow.level * 35) * 100)}%` }} /></div>
-      <div className="mt-1 text-[8px] text-muted-foreground">XP {shadow.xp}/{shadow.level * 35} · Classe: {{ warrior: "Guerreiro", assassin: "Assassino", tank: "Tanque", mage: "Mago", elite: "Elite" }[shadow.kind]}</div>
-    </div>)}
+      <div className="mt-1 flex items-center justify-between text-[8px] text-muted-foreground"><span>XP {shadow.xp}/{shadow.level * 35} · Classe: {{ warrior: "Guerreiro", assassin: "Assassino", tank: "Tanque", mage: "Mago", elite: "Elite" }[shadow.kind]}</span><span className="text-destructive">Toque para expulsar</span></div>
+    </button>)}
   </>);
   if (id === "train") body = (<>
     <div className="grid grid-cols-2 gap-1 text-[10px]">
