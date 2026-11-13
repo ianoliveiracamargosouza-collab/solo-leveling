@@ -36,7 +36,7 @@ function drawTile(c: CanvasRenderingContext2D, t: number, tx: number, ty: number
 function drawPlayer(c: CanvasRenderingContext2D, g: Game) {
   const { x, y } = g.s; const cs = comboStats(g.active); const sc = cs.giant ? 1.7 : 1;
   const forms = g.active.map((id) => FORMS.find((f) => f.id === id)!);
-  const hairForm = [...forms].reverse().find((f) => f.id !== "kaioken");
+  const hairForm = [...forms].reverse()[0];
   const hair = hairForm ? hairForm.hair : "#1a1a1a"; const bob = g.moving ? Math.round(Math.sin(g.animT) * 1.5) : 0;
   c.fillStyle = "rgba(0,0,0,0.3)"; c.beginPath(); c.ellipse(x, y + 12 * sc, 10 * sc, 4 * sc, 0, 0, 6.28); c.fill();
   if (forms.length) {
@@ -52,18 +52,18 @@ function drawPlayer(c: CanvasRenderingContext2D, g: Game) {
     p(-8, -24, 16, 13, "#6b4220"); p(-5, -18, 10, 6, "#d8b48a"); p(-5, -21, 3, 2, "#ff2020"); p(2, -21, 3, 2, "#ff2020");
     p(-14, -10, 4, 12, "#6b4220"); p(10, -10, 4, 12, "#6b4220");
   } else {
-    p(-6, 4, 5, 8 + leg, "#e8771e"); p(1, 4, 5, 8 - leg, "#e8771e"); p(-6, 11 + leg, 5, 2, "#1f4fa8"); p(1, 11 - leg, 5, 2, "#1f4fa8");
-    p(-7, -8, 14, 12, "#e8771e"); p(-7, 2, 14, 2, "#1f4fa8"); p(-3, -8, 6, 3, "#1f4fa8");
+    p(-6, 4, 5, 8 + leg, "#171923"); p(1, 4, 5, 8 - leg, "#171923"); p(-6, 11 + leg, 5, 2, "#4b5563"); p(1, 11 - leg, 5, 2, "#4b5563");
+    p(-7, -8, 14, 12, "#171923"); p(-7, 2, 14, 2, "#4b5563"); p(-3, -8, 6, 3, "#4b5563");
     const punch = g.punchT > 0 ? 5 : 0;
-    p(-10 + (g.facing.x < 0 ? -punch : 0), -7, 3, 9, "#f2c299"); p(7 + (g.facing.x >= 0 ? punch : 0), -7, 3, 9, "#f2c299");
-    p(-5, -18, 10, 10, "#f2c299");
+    p(-10 + (g.facing.x < 0 ? -punch : 0), -7, 3, 9, "#d5ad91"); p(7 + (g.facing.x >= 0 ? punch : 0), -7, 3, 9, "#d5ad91");
+    p(-5, -18, 10, 10, "#e7c3a2");
     if (g.facing.y >= 0) { p(-3, -14, 2, 2, "#111"); p(1, -14, 2, 2, "#111"); }
-    const ssj3 = g.active.includes("ssj3");
+    const ssj3 = false;
     p(-6, -22, 12, 5, hair); p(-8, -24, 3, 6, hair); p(-3, -26, 3, 5, hair); p(1, -27, 3, 6, hair); p(5, -24, 3, 6, hair);
-    if (hairForm && hairForm.id !== "ozaru" && hairForm.id !== "god") { p(-4, -30, 3, 5, hair); p(2, -31, 2, 5, hair); }
+    if (hairForm) { p(-4, -30, 3, 5, hair); p(2, -31, 2, 5, hair); }
     if (ssj3) { p(-7, -18, 3, 22, hair); p(4, -18, 3, 22, hair); }
   }
-  if (g.active.includes("kaioken")) { c.globalAlpha = 0.25 + Math.sin(g.time * 15) * 0.1; p(-12, -30, 24, 44, "#ff0000"); c.globalAlpha = 1; }
+  if (g.active.length) { c.globalAlpha = 0.25 + Math.sin(g.time * 15) * 0.1; p(-12, -30, 24, 44, "#ff0000"); c.globalAlpha = 1; }
   c.restore();
 }
 
