@@ -26,7 +26,7 @@ export function genMap(id: string): GameMap {
   for (let y = spawn.y - 3; y <= spawn.y + 2; y++) for (let x = spawn.x - 3; x <= spawn.x + 3; x++) set(x, y, T.GROUND);
   set(24, 17, T.PORTAL);
   const doors: GameMap["doors"] = [];
-  if (id === "terra") {
+  if (id === "double-dungeon") {
     for (let y = 2; y <= 14; y++) for (let x = 2; x <= 20; x++) set(x, y, T.ROAD);
     for (let x = 2; x <= 24; x++) set(x, 15, T.ROAD);
     for (const hd of HOUSES) {
