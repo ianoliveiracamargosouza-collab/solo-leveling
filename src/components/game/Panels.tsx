@@ -61,7 +61,7 @@ export function Panel({ id, g, close }: { id: PanelId; g: Game; close: () => voi
       <div key={k} className="mb-1.5 flex items-center justify-between text-[10px]">
         <span>{{ str: "Força", def: "Defesa", hp: "Vida", ki: "Mana" }[k]}: {s.train[k]}</span><Btn disabled={s.trainPoints <= 0} onClick={() => g.train(k)}>+1 ponto</Btn>
       </div>))}
-    <div className="mt-3 border-t border-border pt-2 text-[9px] text-muted-foreground">Chefes derrotados: {s.bossesDefeated.join(", ") || "nenhum"}<br/>Fase infinita: {s.phaseBoost + 1} · Força dos inimigos x{Math.pow(2, s.phaseBoost)} · XP x{Math.pow(1.25, s.phaseBoost).toFixed(2)} {s.bossesDefeated.includes("Jiren") && <Btn onClick={() => g.buyNextPhase()}>Dobrar fase — {g.phaseUpgradeCost()}z</Btn>}</div>
+    <div className="mt-3 border-t border-border pt-2 text-[9px] text-muted-foreground">Chefes derrotados: {s.bossesDefeated.join(", ") || "nenhum"}<br/>Fase infinita: {s.phaseBoost + 1} · Força dos inimigos x{Math.pow(2, s.phaseBoost)} · XP x{Math.pow(1.25, s.phaseBoost).toFixed(2)} {s.bossesDefeated.includes("Bellion") && <Btn onClick={() => g.buyNextPhase()}>Dobrar fase — {g.phaseUpgradeCost()}z</Btn>}</div>
   </>);
   if (id === "travel") body = (<div className="grid gap-1.5">
     {MAPS.map((m) => <button key={m.id} disabled={s.level < m.level} onClick={() => { if (g.travel(m.id)) close(); }}
@@ -74,7 +74,7 @@ export function Panel({ id, g, close }: { id: PanelId; g: Game; close: () => voi
     if (g.map.interior) body = (<>
       <div className="mb-2 text-[10px] text-muted-foreground">Fique onde quer colocar a decoração.</div>
       {Object.entries(DECOR).map(([k, d]) => <div key={k} className="mb-1.5 flex justify-between text-[10px]"><span>{d.name}</span><Btn onClick={() => g.buyDecor(k)}>{d.price}z</Btn></div>)}
-      <div className="mt-3 border-t border-border pt-2 text-[10px] text-primary">Loja da casa</div><div className="mb-2 flex items-center justify-between text-[10px]"><span>Poção de Recuperação · restaura toda Vida e Mana<br/><span className="text-muted-foreground">Você tem: {s.senzuBeans}</span></span><Btn onClick={() => g.buySenzu()}>250z Comprar</Btn></div><Btn onClick={() => g.removeDecor()}>Remover decoração aqui (50%)</Btn>
+      <div className="mt-3 border-t border-border pt-2 text-[10px] text-primary">Loja da casa</div><div className="mb-2 flex items-center justify-between text-[10px]"><span>Poção de Recuperação · restaura toda Vida e Mana<br/><span className="text-muted-foreground">Você tem: {s.senzuBeans}</span></span><Btn onClick={() => g.buyPoção()}>250z Comprar</Btn></div><Btn onClick={() => g.removeDecor()}>Remover decoração aqui (50%)</Btn>
     </>);
     else if (hd) body = s.houses[hd.id] ? (<Btn onClick={() => { g.enterHouse(hd.id); close(); }}>Entrar na {hd.name}</Btn>) : (<>
       <div className="mb-3 text-[10px]">{hd.name}<br /><span className="text-muted-foreground">Preço {hd.price}z · Nível mínimo {hd.level} · Você tem {s.gold}z</span></div>
