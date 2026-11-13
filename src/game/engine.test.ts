@@ -9,7 +9,7 @@ describe("Exército das Sombras", () => {
     vi.spyOn(Math, "random").mockReturnValue(0);
     const save = defaultSave();
     const game = new Game(save);
-    game.corpses.push({ id: 9001, name: "Goblin", x: save.x, y: save.y, level: 1, size: 0.9, boss: false, rank: "E", attempted: false });
+    game.corpses.push({ id: 9001, name: "Goblin", x: save.x, y: save.y, level: 1, size: 0.9, boss: false, rank: "E", attempts: 0, attempted: false });
 
     expect(game.extractShadow(9001)).toBe(true);
     expect(save.shadowArmy).toHaveLength(1);
