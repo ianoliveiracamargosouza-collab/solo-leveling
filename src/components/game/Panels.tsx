@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { DECOR, FORMS, HOUSES, MAPS, RARITY_INFO, SLOTS, SLOT_NAMES, VALID_COMBOS, comboStats, isFormUnlocked, type Item } from "@/game/data";
 import type { Game } from "@/game/engine";
 
-export type PanelId = "forms" | "inv" | "train" | "travel" | "house" | "chest" | null;
+export type PanelId = "forms" | "inv" | "train" | "travel" | "house" | "chest" | "shadow" | null;
 const Btn = ({ children, onClick, disabled, active }: { children: ReactNode; onClick: () => void; disabled?: boolean; active?: boolean }) => (
   <button onClick={onClick} disabled={disabled}
     className={`rounded border-2 px-2 py-1 text-[10px] transition-colors disabled:opacity-40 ${active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-secondary text-secondary-foreground hover:border-primary"}`}>{children}</button>
@@ -23,7 +23,7 @@ function ItemLine({ it, children }: { it: Item; children?: ReactNode }) {
 export function Panel({ id, g, close }: { id: PanelId; g: Game; close: () => void }) {
   if (!id) return null;
   const s = g.s; const st = g.stats();
-  const titles: Record<string, string> = { forms: "Habilidades do Monarca", inv: "Mochila & Equipamento", train: "Atributos & Treino", travel: "Portais e Masmorras", house: "Refúgio", chest: "Baú" };
+  const titles: Record<string, string> = { forms: "Habilidades do Monarca", inv: "Mochila & Equipamento", train: "Atributos & Treino", travel: "Portais e Masmorras", house: "Refúgio", chest: "Baú", shadow: "Exército das Sombras" };
   let body: ReactNode = null;
   if (id === "forms") {
     const cs = comboStats(g.active);
@@ -50,6 +50,31 @@ export function Panel({ id, g, close }: { id: PanelId; g: Game; close: () => voi
     <div className="mb-1 mt-3 text-[10px] text-primary">Mochila ({s.inventory.length}/30)</div>
     {s.inventory.length === 0 && <div className="text-[9px] text-muted-foreground">Derrote inimigos para conseguir itens.</div>}
     {s.inventory.map((it) => <ItemLine key={it.uid} it={it}><Btn onClick={() => g.equip(it.uid)}>Usar</Btn><Btn onClick={() => g.sell(it.uid)}>{it.value}z</Btn></ItemLine>)}
+  </>);
+
+  if (id === "shadow") body = (<>
+    <div className="mb-2 flex items-center justify-between rounded border border-primary/40 bg-primary/10 px-2 py-2 text-[10px]">
+      <span>Sombras: {s.shadowArmy.length}/{g.shadowCapacity()}</span>
+      <Btn onClick={() => g.toggleShadows()} disabled={s.shadowArmy.length === 0}>{s.shadowsSummoned ? "Recolher exército" : "Invocar exército"}</Btn>
+    </div>
+    <div className="mb-2 text-[9px] text-muted-foreground">As sombras seguem Jin-Woo e lutam automaticamente quando invocadas. Elas recebem experiência ao derrotar monstros e evoluem de nível.</div>
+    <div className="mb-2 text-[10px] text-primary">Comandos táticos</div>
+    <div className="mb-3 grid grid-cols-2 gap-1">
+      {([
+        ["follow", "Seguir"],
+        ["attack", "Atacar"],
+        ["defend", "Defender"],
+        ["focus", "Focar alvo"],
+      ] as const).map(([cmd, label]) => <Btn key={cmd} active={s.shadowCommand === cmd} onClick={() => g.setShadowCommand(cmd)}>{label}</Btn>)}
+    </div>
+    <div className="mb-1 text-[10px] text-primary">Membros do exército</div>
+    {s.shadowArmy.length === 0 && <div className="rounded border border-dashed border-border p-3 text-center text-[9px] text-muted-foreground">Nenhuma sombra recrutada. Derrote um inimigo e aproxime-se do corpo para usar ERGUE-SE.</div>}
+    {s.shadowArmy.map((shadow) => <div key={shadow.id} className="mb-2 rounded border border-border bg-secondary/60 p-2">
+      <div className="flex items-center justify-between text-[10px]"><strong className="text-primary">{shadow.name}</strong><span>Rank {shadow.rank} · Nv {shadow.level}</span></div>
+      <div className="mt-1 text-[9px] text-muted-foreground">HP {shadow.hp}/{shadow.maxHp} · ATQ {shadow.atk} · DEF {shadow.def}</div>
+      <div className="mt-1 h-1.5 overflow-hidden rounded bg-background"><div className="h-full bg-violet-500" style={{ width: `${Math.min(100, shadow.xp / (shadow.level * 35) * 100)}%` }} /></div>
+      <div className="mt-1 text-[8px] text-muted-foreground">XP {shadow.xp}/{shadow.level * 35} · Classe: {{ warrior: "Guerreiro", assassin: "Assassino", tank: "Tanque", mage: "Mago", elite: "Elite" }[shadow.kind]}</div>
+    </div>)}
   </>);
   if (id === "train") body = (<>
     <div className="grid grid-cols-2 gap-1 text-[10px]">
