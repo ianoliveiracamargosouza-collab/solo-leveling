@@ -18,16 +18,30 @@ describe("Exército das Sombras", () => {
     expect(game.corpses).toHaveLength(0);
   });
 
-  it("mantém o corpo quando a extração falha e impede uma segunda tentativa", () => {
+  it("permite três tentativas e remove o corpo após a terceira falha", () => {
     vi.spyOn(Math, "random").mockReturnValue(0.99);
     const save = defaultSave();
     const game = new Game(save);
-    game.corpses.push({ id: 9002, name: "Goblin", x: save.x, y: save.y, level: 1, boss: false, rank: "E", attempted: false });
+    game.corpses.push({ id: 9002, name: "Goblin", x: save.x, y: save.y, level: 1, boss: false, rank: "E", attempts: 0, attempted: false });
+    expect(game.extractShadow(9002)).toBe(false);
+    expect(game.corpses[0]?.attempts).toBe(1);
+    expect(game.extractShadow(9002)).toBe(false);
+    expect(game.corpses[0]?.attempts).toBe(2);
+    expect(game.extractShadow(9002)).toBe(false);
+    expect(game.corpses).toHaveLength(0);
+    expect(game.extractShadow(9002)).toBe(false);
+  });
 
-    expect(game.extractShadow(9002)).toBe(false);
-    expect(game.corpses[0]?.attempted).toBe(true);
-    expect(game.extractShadow(9002)).toBe(false);
-    expect(save.shadowArmy).toHaveLength(0);
+  it("extrai mesmo com a mochila cheia e mantém a aparência original do inimigo", () => {
+    vi.spyOn(Math, "random").mockReturnValue(0);
+    const save = defaultSave();
+    const game = new Game(save);
+    save.inventory = Array.from({ length: 30 }, (_, i) => ({ uid: String(i), name: "Item", slot: "arma" as const, rarity: "comum" as const, level: 1, atk: 1, def: 0, hp: 0, ki: 0, kiRegen: 0, value: 1 }));
+    game.corpses.push({ id: 9003, name: "Aranha da Masmorra", x: save.x, y: save.y, level: 4, boss: false, rank: "E", attempts: 0, attempted: false });
+    expect(game.extractShadow(9003)).toBe(true);
+    expect(save.shadowArmy[0]?.appearanceName).toBe("Aranha da Masmorra");
+    expect(save.shadowArmy[0]?.size).toBe(1);
+    expect(save.inventory).toHaveLength(30);
   });
 
   it("controla invocação, recolhimento e ordens táticas", () => {
