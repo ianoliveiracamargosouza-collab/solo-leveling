@@ -69,23 +69,27 @@ function drawPlayer(c: CanvasRenderingContext2D, g: Game) {
 
 
 function drawCorpse(c: CanvasRenderingContext2D, corpse: Game["corpses"][number]) {
-  c.save(); c.translate(corpse.x, corpse.y + 7); c.rotate(-0.35);
-  c.fillStyle = "rgba(5,5,12,0.78)"; c.fillRect(-12, -5, 24, 9);
-  c.fillStyle = "#111827"; c.fillRect(-8, -10, 13, 8); c.fillRect(5, -7, 8, 4);
-  c.fillStyle = "#6b7280"; c.fillRect(-13, -3, 7, 4); c.fillRect(9, -2, 7, 4);
+  // Every defeated enemy leaves a dark body marked with the shadow-extraction symbol.
+  c.save(); c.translate(corpse.x, corpse.y + 7); c.rotate(-0.25);
+  c.fillStyle = "rgba(0,0,0,0.5)"; c.beginPath(); c.ellipse(0, 5, 15, 5, 0, 0, 6.28); c.fill();
+  c.fillStyle = "#09090b"; c.fillRect(-7, -7, 14, 13); c.fillRect(-5, -16, 10, 10);
+  c.fillRect(-11, -5, 4, 10); c.fillRect(7, -5, 4, 10); c.fillRect(-6, 5, 4, 7); c.fillRect(2, 5, 4, 7);
+  c.strokeStyle = "#a78bfa"; c.lineWidth = 1.5; c.beginPath(); c.arc(0, -3, 14, 0, 6.28); c.stroke();
+  c.fillStyle = "#c4b5fd"; c.fillRect(-2, -13, 2, 2); c.fillRect(1, -13, 2, 2);
   c.restore();
+  c.font = `6px ${FONT}`; c.textAlign = "center"; c.fillStyle = "#000"; c.fillText(corpse.name, corpse.x + 1, corpse.y - 24 + 1);
+  c.fillStyle = "#e9d5ff"; c.fillText(corpse.name, corpse.x, corpse.y - 24);
   if (!corpse.attempted) {
     const pulse = 0.65 + Math.sin(Date.now() / 220) * 0.25;
-    c.globalAlpha = pulse; c.fillStyle = "#a78bfa"; c.font = `7px ${FONT}`; c.textAlign = "center";
-    c.fillText("ERGUE-SE", corpse.x, corpse.y - 22); c.globalAlpha = 1;
+    c.globalAlpha = pulse; c.fillStyle = "#a78bfa"; c.font = `7px ${FONT}`; c.fillText("ERGUE-SE", corpse.x, corpse.y - 34); c.globalAlpha = 1;
   }
 }
 
 function drawShadow(c: CanvasRenderingContext2D, shadow: Game["s"]["shadowArmy"][number], time: number) {
   c.save(); c.translate(shadow.x, shadow.y + Math.sin(time * 5 + shadow.level) * 1.2);
   c.fillStyle = "rgba(0,0,0,0.35)"; c.beginPath(); c.ellipse(0, 12, 10, 3, 0, 0, 6.28); c.fill();
-  c.fillStyle = shadow.kind === "elite" ? "#4c3b70" : "#171426";
-  c.fillRect(-6, -8, 12, 17); c.fillRect(-5, -18, 10, 10); c.fillRect(-9, -7, 4, 11); c.fillRect(5, -7, 4, 11);
+  c.fillStyle = "#08080b";
+  c.fillRect(-6, -8, 12, 17); c.fillRect(-5, -18, 10, 10); c.fillRect(-9, -7, 4, 11); c.fillRect(5, -7, 4, 11); c.fillRect(-5, 8, 4, 5); c.fillRect(1, 8, 4, 5);
   c.fillStyle = "#a78bfa"; c.fillRect(-3, -14, 2, 2); c.fillRect(1, -14, 2, 2);
   c.globalAlpha = 0.55; c.strokeStyle = "#8b5cf6"; c.lineWidth = 1; c.strokeRect(-8, -20, 16, 34);
   c.restore(); c.globalAlpha = 1;
@@ -122,7 +126,9 @@ export function render(c: CanvasRenderingContext2D, g: Game, vw: number, vh: num
     else if (o.type === "estatua") { c.fillRect(x + 10, y + 2, 12, 26); c.fillRect(x + 6, y + 2, 20, 8); c.fillStyle = "#ff2020"; c.fillRect(x + 10, y + 5, 3, 2); }
     else { c.fillStyle = "#8a5a2e"; c.fillRect(x + 11, y + 20, 10, 10); c.fillStyle = d.color; c.fillRect(x + 7, y + 6, 18, 15); }
   }
+  for (const corpse of g.corpses) drawCorpse(c, corpse);
   const actors: { y: number; draw: () => void }[] = g.enemies.filter((e) => e.alive).map((e) => ({ y: e.y, draw: () => drawEnemy(c, e, g.time) }));
+  if (g.s.shadowsSummoned) for (const shadow of g.s.shadowArmy) actors.push({ y: shadow.y, draw: () => drawShadow(c, shadow, g.time) });
   actors.push({ y: g.s.y, draw: () => drawPlayer(c, g) }); actors.sort((a, b) => a.y - b.y).forEach((a) => a.draw());
   for (const p of g.projs) { c.fillStyle = p.color; c.beginPath(); c.arc(p.x, p.y, p.r, 0, 6.28); c.fill(); c.fillStyle = "#fff"; c.beginPath(); c.arc(p.x, p.y, p.r * 0.5, 0, 6.28); c.fill(); }
   for (const p of g.parts) { c.globalAlpha = Math.min(1, p.life * 2); c.fillStyle = p.color; c.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size); } c.globalAlpha = 1;
