@@ -67,7 +67,31 @@ function drawPlayer(c: CanvasRenderingContext2D, g: Game) {
   c.restore();
 }
 
-function drawEnemy(c: CanvasRenderingContext2D, e: Enemy, time: number) {
+
+function drawCorpse(c: CanvasRenderingContext2D, corpse: Game["corpses"][number]) {
+  c.save(); c.translate(corpse.x, corpse.y + 7); c.rotate(-0.35);
+  c.fillStyle = "rgba(5,5,12,0.78)"; c.fillRect(-12, -5, 24, 9);
+  c.fillStyle = "#111827"; c.fillRect(-8, -10, 13, 8); c.fillRect(5, -7, 8, 4);
+  c.fillStyle = "#6b7280"; c.fillRect(-13, -3, 7, 4); c.fillRect(9, -2, 7, 4);
+  c.restore();
+  if (!corpse.attempted) {
+    const pulse = 0.65 + Math.sin(Date.now() / 220) * 0.25;
+    c.globalAlpha = pulse; c.fillStyle = "#a78bfa"; c.font = `7px ${FONT}`; c.textAlign = "center";
+    c.fillText("ERGUE-SE", corpse.x, corpse.y - 22); c.globalAlpha = 1;
+  }
+}
+
+function drawShadow(c: CanvasRenderingContext2D, shadow: Game["s"]["shadowArmy"][number], time: number) {
+  c.save(); c.translate(shadow.x, shadow.y + Math.sin(time * 5 + shadow.level) * 1.2);
+  c.fillStyle = "rgba(0,0,0,0.35)"; c.beginPath(); c.ellipse(0, 12, 10, 3, 0, 0, 6.28); c.fill();
+  c.fillStyle = shadow.kind === "elite" ? "#4c3b70" : "#171426";
+  c.fillRect(-6, -8, 12, 17); c.fillRect(-5, -18, 10, 10); c.fillRect(-9, -7, 4, 11); c.fillRect(5, -7, 4, 11);
+  c.fillStyle = "#a78bfa"; c.fillRect(-3, -14, 2, 2); c.fillRect(1, -14, 2, 2);
+  c.globalAlpha = 0.55; c.strokeStyle = "#8b5cf6"; c.lineWidth = 1; c.strokeRect(-8, -20, 16, 34);
+  c.restore(); c.globalAlpha = 1;
+  c.font = `6px ${FONT}`; c.textAlign = "center"; c.fillStyle = "#c4b5fd"; c.fillText(shadow.name, shadow.x, shadow.y - 24);
+}
+\nfunction drawEnemy(c: CanvasRenderingContext2D, e: Enemy, time: number) {
   const s = e.def.size, bob = Math.round(Math.sin(time * 6 + e.id) * 1.5), w = 18 * s, h = 22 * s;
   c.fillStyle = "rgba(0,0,0,0.3)"; c.beginPath(); c.ellipse(e.x, e.y + 11 * s, 10 * s, 4 * s, 0, 0, 6.28); c.fill();
   if (e.rarity !== "comum" || e.boss) { c.strokeStyle = e.boss ? "#ff3030" : RARITY_INFO[e.rarity].color; c.lineWidth = 2; c.beginPath(); c.ellipse(e.x, e.y + 11 * s, 13 * s, 5 * s, 0, 0, 6.28); c.stroke(); }
