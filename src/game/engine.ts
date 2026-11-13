@@ -7,7 +7,7 @@ export interface Enemy { id: number; def: EnemyDef; boss: boolean; rarity: Rarit
 interface Proj { x: number; y: number; vx: number; vy: number; dmg: number; r: number; from: "p" | "e"; life: number; color: string; pierce: boolean; hit: Set<number> }
 interface FText { x: number; y: number; text: string; color: string; life: number }
 interface Part { x: number; y: number; vx: number; vy: number; life: number; color: string; size: number }
-export interface Corpse { id: number; name: string; x: number; y: number; level: number; boss: boolean; rank: string; attempted: boolean }
+export interface Corpse { id: number; name: string; x: number; y: number; level: number; boss: boolean; rank: string; attempts: number; attempted: boolean }
 export type Ctx = { type: "portal" } | { type: "door"; houseId: string } | { type: "exit" } | { type: "chest" } | { type: "corpse"; corpseId: number } | null;
 const HALF = 9;
 
@@ -206,7 +206,7 @@ export class Game {
   }
   private kill(e: Enemy) {
     e.alive = false; e.respawnAt = this.time + (e.boss ? 90 : 12);
-    this.corpses.push({ id: this.nextCorpseId++, name: e.def.name, x: e.x, y: e.y, level: e.def.level, boss: e.boss, rank: this.currentRank(), attempted: false });
+    this.corpses.push({ id: this.nextCorpseId++, name: e.def.name, x: e.x, y: e.y, level: e.def.level, boss: e.boss, rank: this.currentRank(), attempts: 0, attempted: false });
     this.s.gold += e.gold; this.msg(`${e.def.name} derrotado! +${e.xp} XP, +${e.gold}z`, "#9fe870");
     for (let i = 0; i < 14; i++) { const a = Math.random() * 6.28; this.parts.push({ x: e.x, y: e.y, vx: Math.cos(a) * 90, vy: Math.sin(a) * 90, life: 0.5, color: e.def.color, size: 3 }); }
     if (e.boss || Math.random() < 0.3 + (e.rarity !== "comum" ? 0.3 : 0)) {
@@ -245,7 +245,7 @@ export class Game {
   nearestCorpse(range: number) {
     let best: Corpse | null = null, bd = range;
     for (const corpse of this.corpses) {
-      if (corpse.attempted) continue;
+      if (corpse.attempts >= 3 || corpse.attempted) continue;
       const d = Math.hypot(corpse.x - this.s.x, corpse.y - this.s.y);
       if (d < bd) { bd = d; best = corpse; }
     }
@@ -266,22 +266,30 @@ export class Game {
 
   extractShadow(corpseId: number) {
     const corpse = this.corpses.find((x) => x.id === corpseId);
-    if (!corpse || corpse.attempted) { this.msg("Este corpo já não pode ser extraído.", "#ff7777"); return false; }
+    if (!corpse || corpse.attempts >= 3 || corpse.attempted) { this.msg("Este corpo já não pode ser extraído.", "#ff7777"); return false; }
     if (this.s.shadowArmy.length >= this.shadowCapacity()) { this.msg(`Exército cheio! Limite atual: ${this.shadowCapacity()} sombras.`, "#ff7777"); return false; }
     if (["Igris", "Beru", "Bellion", "Arquiteto", "Iron", "Tusk"].includes(corpse.name) && this.s.shadowArmy.some((x) => x.name === corpse.name)) {
-      this.msg(`${corpse.name} já faz parte do seu exército.`, "#ff7777"); corpse.attempted = true; return false;
-    }
-    corpse.attempted = true;
-    const chance = this.extractionChance(corpse);
-    if (Math.random() > chance) {
-      this.msg(`A extração de ${corpse.name} falhou (${Math.round(chance * 100)}% de chance). O corpo permaneceu.`, "#a78bfa");
+      corpse.attempts++;
+      if (corpse.attempts >= 3) { this.corpses = this.corpses.filter((x) => x.id !== corpseId); this.msg(`${corpse.name}: três tentativas esgotadas. O corpo desapareceu.`, "#a78bfa"); }
+      else this.msg(`${corpse.name} já faz parte do seu exército. Tentativa ${corpse.attempts}/3.`, "#ff7777");
       return false;
     }
+    const chance = this.extractionChance(corpse);
+    if (Math.random() > chance) {
+      corpse.attempts++;
+      if (corpse.attempts >= 3) {
+        this.corpses = this.corpses.filter((x) => x.id !== corpseId);
+        this.msg(`A extração de ${corpse.name} falhou 3 vezes. O corpo desapareceu.`, "#a78bfa");
+      } else this.msg(`A extração de ${corpse.name} falhou (${Math.round(chance * 100)}%). Tentativa ${corpse.attempts}/3.`, "#a78bfa");
+      return false;
+    }
+    corpse.attempted = true;
     const unique = ["Igris", "Beru", "Bellion", "Arquiteto", "Iron", "Tusk"].includes(corpse.name);
     const kind: ShadowUnit["kind"] = corpse.name === "Beru" ? "assassin" : corpse.name === "Tusk" ? "mage" : corpse.name === "Iron" || /golem|orc/i.test(corpse.name) ? "tank" : corpse.name === "Bellion" ? "elite" : "warrior";
     const shadow: ShadowUnit = {
       id: `shadow-${corpse.id}-${Date.now()}`, name: unique ? corpse.name : `Sombra de ${corpse.name}`,
-      rank: corpse.rank, level: Math.max(1, corpse.level), xp: 0,
+      appearanceName: corpse.name, size: corpse.boss ? 1.7 : 1,
+      rank: corpse.rank, level: Math.max(1, corpse.level),
       maxHp: Math.round(80 + corpse.level * (kind === "tank" ? 24 : 16)),
       hp: Math.round(80 + corpse.level * (kind === "tank" ? 24 : 16)),
       atk: Math.round(6 + corpse.level * (kind === "assassin" ? 5 : kind === "mage" ? 4.5 : 4)),
