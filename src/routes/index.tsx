@@ -112,10 +112,10 @@ function Index() {
         <div className="absolute bottom-4 right-4 z-10 grid grid-cols-2 items-end gap-2">
           {ctxLabel ? <button onClick={interact} className="col-span-2 rounded border-2 border-accent bg-accent/30 px-3 py-2 text-[9px] text-foreground">{ctxLabel} [F]</button> : null}
           <button onPointerDown={(e) => { e.preventDefault(); e.currentTarget.setPointerCapture(e.pointerId); g.setChargingKi(true); }} onPointerUp={() => g.setChargingKi(false)} onPointerCancel={() => g.setChargingKi(false)} onContextMenu={(e) => e.preventDefault()} className={`h-14 w-14 touch-none select-none rounded-full border-2 text-[9px] text-foreground ${g.chargingKi ? "border-sky-300 bg-sky-400/50 shadow-[0_0_14px_#38bdf8]" : "border-sky-500 bg-sky-500/20"}`} title="Segure para recuperar mana [R]">Recuperar Mana</button>
-          <ActBtn label={`Senzu (${g.s.senzuBeans})`} onPress={() => g.useSenzu()} />
+          <ActBtn label={`Poção (${g.s.senzuBeans})`} onPress={() => g.useSenzu()} />
           <ActBtn label="Mana [Q]" onPress={() => g.blast()} cd={g.cd.blast > 0.05 ? g.cd.blast : 0} />
           <ActBtn label="Corte [E]" onPress={() => g.kame()} cd={g.cd.kame > 0.05 ? g.cd.kame : 0} />
-          <div className="col-span-2 flex justify-end"><ActBtn big label="Soco [Espaço]" onPress={() => g.punch()} /></div>
+          <div className="col-span-2 flex justify-end"><ActBtn big label="Ataque [Espaço]" onPress={() => g.punch()} /></div>
         </div>
         <Panel id={panel} g={g} close={() => setPanel(null)} />
       </>)}
