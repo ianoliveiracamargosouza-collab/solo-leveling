@@ -243,7 +243,7 @@ export class Game {
 
   nearestCorpse(range: number) {
     let best: Corpse | null = null, bd = range;
-    for (const corpse of this.corpses) {
+    for (const corpse of this.corpses) {\n      if (corpse.attempted) continue;
       const d = Math.hypot(corpse.x - this.s.x, corpse.y - this.s.y);
       if (d < bd) { bd = d; best = corpse; }
     }
@@ -275,7 +275,7 @@ export class Game {
       this.msg(`A extração de ${corpse.name} falhou (${Math.round(chance * 100)}% de chance). O corpo permaneceu.`, "#a78bfa");
       return false;
     }
-    const unique = ["Igris", "Beru", "Bellion", "Arquiteto"].includes(corpse.name);
+    const unique = ["Igris", "Beru", "Bellion", "Arquiteto", "Iron", "Tusk"].includes(corpse.name);
     const kind: ShadowUnit["kind"] = corpse.name === "Beru" ? "assassin" : corpse.name === "Tusk" ? "mage" : corpse.name === "Iron" || /golem|orc/i.test(corpse.name) ? "tank" : corpse.name === "Bellion" ? "elite" : "warrior";
     const shadow: ShadowUnit = {
       id: `shadow-${corpse.id}-${Date.now()}`, name: unique ? corpse.name : `Sombra de ${corpse.name}`,
@@ -286,7 +286,7 @@ export class Game {
       def: Math.round(3 + corpse.level * (kind === "tank" ? 3 : 2)),
       x: this.s.x + (Math.random() - 0.5) * 42, y: this.s.y + 26, cooldown: 0, kind,
     };
-    this.s.shadowArmy.push(shadow);
+    this.s.shadowArmy.push(shadow);\n    for (let i = 0; i < 28; i++) { const a = Math.random() * Math.PI * 2; this.parts.push({ x: corpse.x, y: corpse.y, vx: Math.cos(a) * 110, vy: Math.sin(a) * 110, life: 0.65, color: "#8b5cf6", size: 3 + Math.random() * 2 }); }
     this.corpses = this.corpses.filter((x) => x.id !== corpseId);
     this.msg(`${shadow.name} foi adicionada ao Exército das Sombras!`, "#a78bfa");
     this.s.shadowsSummoned = true; writeSave(this.s); return true;
