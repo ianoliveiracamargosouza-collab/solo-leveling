@@ -1,7 +1,7 @@
 // Persistent player save (localStorage).
 import type { Item, Slot } from "./data";
 export interface HouseState { decor: { type: string; x: number; y: number }[]; chest: Item[] }
-export interface ShadowUnit { id: string; name: string; rank: string; level: number; xp: number; hp: number; maxHp: number; atk: number; def: number; x: number; y: number; cooldown: number; kind: "warrior" | "assassin" | "tank" | "mage" | "elite" }
+export interface ShadowUnit { id: string; name: string; appearanceName: string; size: number; rank: string; level: number; xp: number; hp: number; maxHp: number; atk: number; def: number; x: number; y: number; cooldown: number; kind: "warrior" | "assassin" | "tank" | "mage" | "elite" }
 export type ShadowCommand = "follow" | "attack" | "defend" | "focus";
 export interface SaveData {
   version: 1; name: string; level: number; xp: number; gold: number; hp: number; ki: number;
@@ -16,7 +16,7 @@ export function defaultSave(): SaveData {
     inventory: [], equipped: {}, houses: {}, mapId: "double-dungeon", x: -1, y: -1, testMode: false, bossesDefeated: [], prestige: 0, shadowArmy: [], shadowsSummoned: true, shadowCommand: "follow" };
 }
 export function loadSave(): SaveData {
-  try { const raw = localStorage.getItem(KEY); if (raw) { const d = defaultSave(); const p = JSON.parse(raw); return { ...d, ...p, train: { ...d.train, ...(p.train ?? {}) }, houses: p.houses ?? {}, shadowArmy: Array.isArray(p.shadowArmy) ? p.shadowArmy : [], shadowsSummoned: p.shadowsSummoned ?? true, shadowCommand: p.shadowCommand ?? "follow" }; } } catch { /* corrupt save */ }
+  try { const raw = localStorage.getItem(KEY); if (raw) { const d = defaultSave(); const p = JSON.parse(raw); return { ...d, ...p, train: { ...d.train, ...(p.train ?? {}) }, houses: p.houses ?? {}, shadowArmy: Array.isArray(p.shadowArmy) ? p.shadowArmy.map((u: Partial<ShadowUnit>) => ({ ...u, appearanceName: u.appearanceName ?? String(u.name ?? "Goblin").replace(/^Sombra de /, ""), size: u.size ?? 1 })) : [], shadowsSummoned: p.shadowsSummoned ?? true, shadowCommand: p.shadowCommand ?? "follow" }; } } catch { /* corrupt save */ }
   return defaultSave();
 }
 export function writeSave(s: SaveData) { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch { /* quota */ } }
