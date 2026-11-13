@@ -7,7 +7,7 @@ export interface Enemy { id: number; def: EnemyDef; boss: boolean; rarity: Rarit
 interface Proj { x: number; y: number; vx: number; vy: number; dmg: number; r: number; from: "p" | "e"; life: number; color: string; pierce: boolean; hit: Set<number> }
 interface FText { x: number; y: number; text: string; color: string; life: number }
 interface Part { x: number; y: number; vx: number; vy: number; life: number; color: string; size: number }
-export interface Corpse { id: number; name: string; x: number; y: number; level: number; boss: boolean; rank: string; attempts: number; attempted: boolean }
+export interface Corpse { id: number; name: string; x: number; y: number; level: number; size: number; boss: boolean; rank: string; attempts: number; attempted: boolean }
 export type Ctx = { type: "portal" } | { type: "door"; houseId: string } | { type: "exit" } | { type: "chest" } | { type: "corpse"; corpseId: number } | null;
 const HALF = 9;
 
@@ -206,7 +206,7 @@ export class Game {
   }
   private kill(e: Enemy) {
     e.alive = false; e.respawnAt = this.time + (e.boss ? 90 : 12);
-    this.corpses.push({ id: this.nextCorpseId++, name: e.def.name, x: e.x, y: e.y, level: e.def.level, boss: e.boss, rank: this.currentRank(), attempts: 0, attempted: false });
+    this.corpses.push({ id: this.nextCorpseId++, name: e.def.name, x: e.x, y: e.y, level: e.def.level, size: e.def.size, boss: e.boss, rank: this.currentRank(), attempts: 0, attempted: false });
     this.s.gold += e.gold; this.msg(`${e.def.name} derrotado! +${e.xp} XP, +${e.gold}z`, "#9fe870");
     for (let i = 0; i < 14; i++) { const a = Math.random() * 6.28; this.parts.push({ x: e.x, y: e.y, vx: Math.cos(a) * 90, vy: Math.sin(a) * 90, life: 0.5, color: e.def.color, size: 3 }); }
     if (e.boss || Math.random() < 0.3 + (e.rarity !== "comum" ? 0.3 : 0)) {
@@ -288,7 +288,7 @@ export class Game {
     const kind: ShadowUnit["kind"] = corpse.name === "Beru" ? "assassin" : corpse.name === "Tusk" ? "mage" : corpse.name === "Iron" || /golem|orc/i.test(corpse.name) ? "tank" : corpse.name === "Bellion" ? "elite" : "warrior";
     const shadow: ShadowUnit = {
       id: `shadow-${corpse.id}-${Date.now()}`, name: unique ? corpse.name : `Sombra de ${corpse.name}`,
-      appearanceName: corpse.name, size: corpse.boss ? 1.7 : 1,
+      appearanceName: corpse.name, size: corpse.size,
       rank: corpse.rank, level: Math.max(1, corpse.level),
       maxHp: Math.round(80 + corpse.level * (kind === "tank" ? 24 : 16)),
       hp: Math.round(80 + corpse.level * (kind === "tank" ? 24 : 16)),
