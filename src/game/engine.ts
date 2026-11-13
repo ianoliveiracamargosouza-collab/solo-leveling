@@ -328,7 +328,7 @@ export class Game {
         if (!enemy.alive) continue;
         const d = Math.hypot(enemy.x - shadow.x, enemy.y - shadow.y);
         const fromPlayer = Math.hypot(enemy.x - this.s.x, enemy.y - this.s.y);
-        const limit = this.s.shadowCommand === "defend" || this.s.shadowCommand === "follow" ? 150 : this.s.shadowCommand === "focus" ? 520 : 420;
+        const limit = this.s.shadowCommand === "defend" ? 90 : this.s.shadowCommand === "follow" ? 150 : this.s.shadowCommand === "focus" ? 520 : 420;
         if (fromPlayer > limit && this.s.shadowCommand !== "attack") continue;
         if (d < best) { best = d; target = enemy; }
       }
