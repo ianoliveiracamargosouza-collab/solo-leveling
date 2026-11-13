@@ -7,7 +7,8 @@ export interface Enemy { id: number; def: EnemyDef; boss: boolean; rarity: Rarit
 interface Proj { x: number; y: number; vx: number; vy: number; dmg: number; r: number; from: "p" | "e"; life: number; color: string; pierce: boolean; hit: Set<number> }
 interface FText { x: number; y: number; text: string; color: string; life: number }
 interface Part { x: number; y: number; vx: number; vy: number; life: number; color: string; size: number }
-export interface Corpse { id: number; name: string; x: number; y: number; level: number; boss: boolean; rank: string; attempted: boolean }\nexport type Ctx = { type: "portal" } | { type: "door"; houseId: string } | { type: "exit" } | { type: "chest" } | { type: "corpse"; corpseId: number } | null;
+export interface Corpse { id: number; name: string; x: number; y: number; level: number; boss: boolean; rank: string; attempted: boolean }
+export type Ctx = { type: "portal" } | { type: "door"; houseId: string } | { type: "exit" } | { type: "chest" } | { type: "corpse"; corpseId: number } | null;
 const HALF = 9;
 
 export class Game {
@@ -91,7 +92,8 @@ export class Game {
     if (tile === T.PORTAL) this.context = { type: "portal" };
     else if (tile === T.DOOR) { const d = this.map.doors.find((d) => d.x === tx && d.y === ty); if (d) this.context = { type: "door", houseId: d.houseId }; }
     else if (tile === T.EXIT) this.context = { type: "exit" };
-    else if (this.map.interior && ty <= 2 && Math.abs(tx - Math.floor(this.map.w / 2)) <= 1) this.context = { type: "chest" };\n    else { const corpse = this.nearestCorpse(48); if (corpse) this.context = { type: "corpse", corpseId: corpse.id }; }
+    else if (this.map.interior && ty <= 2 && Math.abs(tx - Math.floor(this.map.w / 2)) <= 1) this.context = { type: "chest" };
+    else { const corpse = this.nearestCorpse(48); if (corpse) this.context = { type: "corpse", corpseId: corpse.id }; }
     // Ki, forms, strain. Never read aura data after a depletion-triggered revert.
     const wasTransformed = this.active.length > 0;
     if (wasTransformed) {
@@ -202,7 +204,8 @@ export class Game {
     if (e.hp <= 0) this.kill(e);
   }
   private kill(e: Enemy) {
-    e.alive = false; e.respawnAt = this.time + (e.boss ? 90 : 12);\n    this.corpses.push({ id: e.id, name: e.def.name, x: e.x, y: e.y, level: e.def.level, boss: e.boss, rank: this.currentRank(), attempted: false });
+    e.alive = false; e.respawnAt = this.time + (e.boss ? 90 : 12);
+    this.corpses.push({ id: e.id, name: e.def.name, x: e.x, y: e.y, level: e.def.level, boss: e.boss, rank: this.currentRank(), attempted: false });
     this.s.gold += e.gold; this.msg(`${e.def.name} derrotado! +${e.xp} XP, +${e.gold}z`, "#9fe870");
     for (let i = 0; i < 14; i++) { const a = Math.random() * 6.28; this.parts.push({ x: e.x, y: e.y, vx: Math.cos(a) * 90, vy: Math.sin(a) * 90, life: 0.5, color: e.def.color, size: 3 }); }
     if (e.boss || Math.random() < 0.3 + (e.rarity !== "comum" ? 0.3 : 0)) {
@@ -214,7 +217,8 @@ export class Game {
       if (!this.s.bossesDefeated.includes(e.def.name)) this.s.bossesDefeated.push(e.def.name);
       if (e.def.name === "Bellion") { this.s.prestige++; this.msg(`MONARCA DAS SOMBRAS! Castelo do Monarca agora nível ${this.s.prestige + 1}.`, "#ffb020"); }
     }
-    this.gainXp(e.xp);\n    this.gainShadowXp(Math.max(1, Math.floor(e.xp * 0.2)));
+    this.gainXp(e.xp);
+    this.gainShadowXp(Math.max(1, Math.floor(e.xp * 0.2)));
   }
   gainXp(x: number) {
     this.s.xp += x;
@@ -341,7 +345,8 @@ export class Game {
       }
     }
   }
-\n  punch() {
+
+  punch() {
     this.chargingKi = false;
     if (this.cd.punch > 0) return; this.cd.punch = 0.35; this.punchT = 0.15;
     const e = this.nearest(48); if (e) { this.faceTo(e); this.hitEnemy(e, this.stats().atk); }
