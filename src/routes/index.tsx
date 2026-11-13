@@ -10,10 +10,10 @@ import { Panel, type PanelId } from "@/components/game/Panels";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Dragon Ball Tibia RPG — Evolua seu Saiyajin" },
-      { name: "description", content: "RPG 2D pixel art estilo Tibia no universo Dragon Ball: explore planetas, lute, transforme-se e compre casas." },
-      { property: "og:title", content: "Dragon Ball Tibia RPG" },
-      { property: "og:description", content: "Evolua seu Saiyajin até o guerreiro mais forte do multiverso." },
+      { title: "Solo Leveling: Shadow Monarch" },
+      { name: "description", content: "RPG 2D pixel art de Solo Leveling: entre em portais, derrote monstros e desperte o poder do Monarca das Sombras." },
+      { property: "og:title", content: "Solo Leveling: Shadow Monarch" },
+      { property: "og:description", content: "Evolua Sung Jin-Woo e torne-se o Monarca das Sombras." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -90,12 +90,12 @@ function Index() {
         <div className="absolute left-2 top-2 z-10 w-52 space-y-1 rounded-md border-2 border-border bg-card/80 p-2">
           <div className="flex justify-between text-[9px]"><span className="text-primary">{g.s.name} Nv {g.s.level}</span><span className="text-accent">{g.s.gold}z</span></div>
           <Bar v={g.s.hp} max={st.maxHp} color="var(--hp)" label={`${Math.ceil(g.s.hp)}/${st.maxHp}`} />
-          <Bar v={g.s.ki} max={st.maxKi} color="var(--ki)" label={`Ki ${Math.floor(g.s.ki)}/${st.maxKi}`} />
+          <Bar v={g.s.ki} max={st.maxKi} color="var(--ki)" label={`Mana ${Math.floor(g.s.ki)}/${st.maxKi}`} />
           <Bar v={g.s.xp} max={xpToNext(g.s.level)} color="var(--xp)" label={`XP ${g.s.xp}/${xpToNext(g.s.level)}`} />
           <div className="text-[8px] text-muted-foreground">{g.map.interior ? g.map.name : getMapDef(g.map.id).name}{g.active.length ? ` · x${comboStats(g.active).mult.toFixed(1)}` : ""}</div>
         </div>
         <div className="absolute right-2 top-2 z-10 flex flex-wrap justify-end gap-1">
-          {([["forms", "Formas"], ["inv", "Mochila"], ["train", "Treino"]] as const).map(([id, l]) => (
+          {([["forms", "Habilidades"], ["inv", "Mochila"], ["train", "Treino"]] as const).map(([id, l]) => (
             <button key={id} onClick={() => setPanel(panel === id ? null : id)} className="rounded border-2 border-border bg-card/85 px-2 py-1.5 text-[9px] hover:border-primary">{l}</button>))}
           {g.map.interior && <button onClick={() => setPanel(panel === "house" ? null : "house")} className="rounded border-2 border-border bg-card/85 px-2 py-1.5 text-[9px] hover:border-primary">Decorar</button>}
           <button onClick={() => { if (confirm("Apagar todo o progresso?")) { clearSave(); location.reload(); } }} className="rounded border-2 border-border bg-card/85 px-2 py-1.5 text-[9px] text-destructive">Reset</button>
@@ -111,10 +111,10 @@ function Index() {
         <div className="absolute bottom-4 left-4 z-10"><Joystick onMove={(x, y) => { g.joy = { x, y }; }} /></div>
         <div className="absolute bottom-4 right-4 z-10 grid grid-cols-2 items-end gap-2">
           {ctxLabel ? <button onClick={interact} className="col-span-2 rounded border-2 border-accent bg-accent/30 px-3 py-2 text-[9px] text-foreground">{ctxLabel} [F]</button> : null}
-          <button onPointerDown={(e) => { e.preventDefault(); e.currentTarget.setPointerCapture(e.pointerId); g.setChargingKi(true); }} onPointerUp={() => g.setChargingKi(false)} onPointerCancel={() => g.setChargingKi(false)} onContextMenu={(e) => e.preventDefault()} className={`h-14 w-14 touch-none select-none rounded-full border-2 text-[9px] text-foreground ${g.chargingKi ? "border-sky-300 bg-sky-400/50 shadow-[0_0_14px_#38bdf8]" : "border-sky-500 bg-sky-500/20"}`} title="Segure para carregar Ki [R]">Carregar Ki</button>
+          <button onPointerDown={(e) => { e.preventDefault(); e.currentTarget.setPointerCapture(e.pointerId); g.setChargingKi(true); }} onPointerUp={() => g.setChargingKi(false)} onPointerCancel={() => g.setChargingKi(false)} onContextMenu={(e) => e.preventDefault()} className={`h-14 w-14 touch-none select-none rounded-full border-2 text-[9px] text-foreground ${g.chargingKi ? "border-sky-300 bg-sky-400/50 shadow-[0_0_14px_#38bdf8]" : "border-sky-500 bg-sky-500/20"}`} title="Segure para recuperar mana [R]">Recuperar Mana</button>
           <ActBtn label={`Senzu (${g.s.senzuBeans})`} onPress={() => g.useSenzu()} />
-          <ActBtn label="Ki [Q]" onPress={() => g.blast()} cd={g.cd.blast > 0.05 ? g.cd.blast : 0} />
-          <ActBtn label="Kame [E]" onPress={() => g.kame()} cd={g.cd.kame > 0.05 ? g.cd.kame : 0} />
+          <ActBtn label="Mana [Q]" onPress={() => g.blast()} cd={g.cd.blast > 0.05 ? g.cd.blast : 0} />
+          <ActBtn label="Corte [E]" onPress={() => g.kame()} cd={g.cd.kame > 0.05 ? g.cd.kame : 0} />
           <div className="col-span-2 flex justify-end"><ActBtn big label="Soco [Espaço]" onPress={() => g.punch()} /></div>
         </div>
         <Panel id={panel} g={g} close={() => setPanel(null)} />
