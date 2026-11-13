@@ -332,6 +332,7 @@ export class Game {
         if (fromPlayer > limit && this.s.shadowCommand !== "attack") continue;
         if (d < best) { best = d; target = enemy; }
       }
+      if (this.s.shadowCommand === "focus") target = this.nearest(520);
       if (target) {
         const dx = target.x - shadow.x, dy = target.y - shadow.y, d = Math.hypot(dx, dy) || 1;
         const reach = shadow.kind === "mage" ? 92 : 28;
