@@ -234,12 +234,12 @@ export class Game {
   blast() {
     this.chargingKi = false;
     if (this.cd.blast > 0 || this.s.ki < 8) { if (this.s.ki < 8) this.msg("Mana insuficiente", "#7fd6ff"); return; }
-    this.cd.blast = 0.3; this.s.ki -= 8; this.fire(this.stats().atk * 1.4, 380, 6, "#7fd6ff", false, 1);
+    this.cd.blast = 0.3; this.s.ki -= 8; this.fire(this.stats().atk * 1.4, 380, 6, "#8b5cf6", false, 1);
   }
   kame() {
     this.chargingKi = false;
     if (this.cd.kame > 0 || this.s.ki < 35) { if (this.s.ki < 35) this.msg("Mana insuficiente para a habilidade", "#7fd6ff"); return; }
-    this.cd.kame = 2.5; this.s.ki -= 35; this.fire(this.stats().atk * 3.5, 420, 14, "#4fc3ff", true, 1.2);
+    this.cd.kame = 2.5; this.s.ki -= 35; this.fire(this.stats().atk * 3.5, 420, 14, "#a78bfa", true, 1.2);
   }
   private faceTo(e: Enemy) { const d = Math.hypot(e.x - this.s.x, e.y - this.s.y) || 1; this.facing = { x: (e.x - this.s.x) / d, y: (e.y - this.s.y) / d }; }
   private fire(dmg: number, speed: number, r: number, color: string, pierce: boolean, life: number) {
@@ -266,19 +266,19 @@ export class Game {
   train(stat: "str" | "def" | "hp" | "ki") {
     if (this.s.trainPoints <= 0) { this.msg("Você não tem pontos de status disponíveis", "#aaaaaa"); return; }
     this.s.train[stat]++; this.s.trainPoints--;
-    const names = { str: "Força", def: "Defesa", hp: "Vida", ki: "Ki" };
+    const names = { str: "Força", def: "Defesa", hp: "Vida", ki: "Mana" };
     const st = this.stats(); this.s.hp = Math.min(this.s.hp, st.maxHp); this.s.ki = Math.min(this.s.ki, st.maxKi);
     this.msg(names[stat] + " +1 · Pontos restantes: " + this.s.trainPoints, "#9fe870");
   }
 
   phaseUpgradeCost() { return Math.round(1000 * Math.pow(2, this.s.phaseBoost)); }
   buyNextPhase() {
-    if (!this.s.bossesDefeated.includes("Bellion")) { this.msg("Derrote Jiren para liberar a a progressão de ameaça", "#ff7777"); return; }
+    if (!this.s.bossesDefeated.includes("Bellion")) { this.msg("Derrote Bellion para liberar a progressão de ameaça", "#ff7777"); return; }
     const cost = this.phaseUpgradeCost();
     if (this.s.gold < cost) { this.msg("Faltam " + (cost - this.s.gold) + "z", "#ff7777"); return; }
     this.s.gold -= cost; this.s.phaseBoost++;
     this.loadMap(this.map.interior ? "double-dungeon" : this.map.id);
-    this.msg("Fase " + (this.s.phaseBoost + 1) + ": força dos monstros x" + Math.pow(2, this.s.phaseBoost) + " · XP x" + Math.pow(1.25, this.s.phaseBoost).toFixed(2), "#ffb020");
+    this.msg("Ameaça " + (this.s.phaseBoost + 1) + ": força dos monstros x" + Math.pow(2, this.s.phaseBoost) + " · XP x" + Math.pow(1.25, this.s.phaseBoost).toFixed(2), "#ffb020");
     writeSave(this.s);
   }
 
