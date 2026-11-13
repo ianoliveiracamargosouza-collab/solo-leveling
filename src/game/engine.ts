@@ -267,7 +267,7 @@ export class Game {
     const corpse = this.corpses.find((x) => x.id === corpseId);
     if (!corpse || corpse.attempted) { this.msg("Este corpo já não pode ser extraído.", "#ff7777"); return false; }
     if (this.s.shadowArmy.length >= this.shadowCapacity()) { this.msg(`Exército cheio! Limite atual: ${this.shadowCapacity()} sombras.`, "#ff7777"); return false; }
-    if (["Igris", "Beru", "Bellion", "Arquiteto"].includes(corpse.name) && this.s.shadowArmy.some((x) => x.name === corpse.name)) {
+    if (["Igris", "Beru", "Bellion", "Arquiteto", "Iron", "Tusk"].includes(corpse.name) && this.s.shadowArmy.some((x) => x.name === corpse.name)) {
       this.msg(`${corpse.name} já faz parte do seu exército.`, "#ff7777"); corpse.attempted = true; return false;
     }
     corpse.attempted = true;
