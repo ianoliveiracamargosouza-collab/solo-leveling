@@ -91,7 +91,8 @@ function drawShadow(c: CanvasRenderingContext2D, shadow: Game["s"]["shadowArmy"]
   c.restore(); c.globalAlpha = 1;
   c.font = `6px ${FONT}`; c.textAlign = "center"; c.fillStyle = "#c4b5fd"; c.fillText(shadow.name, shadow.x, shadow.y - 24);
 }
-\nfunction drawEnemy(c: CanvasRenderingContext2D, e: Enemy, time: number) {
+
+function drawEnemy(c: CanvasRenderingContext2D, e: Enemy, time: number) {
   const s = e.def.size, bob = Math.round(Math.sin(time * 6 + e.id) * 1.5), w = 18 * s, h = 22 * s;
   c.fillStyle = "rgba(0,0,0,0.3)"; c.beginPath(); c.ellipse(e.x, e.y + 11 * s, 10 * s, 4 * s, 0, 0, 6.28); c.fill();
   if (e.rarity !== "comum" || e.boss) { c.strokeStyle = e.boss ? "#ff3030" : RARITY_INFO[e.rarity].color; c.lineWidth = 2; c.beginPath(); c.ellipse(e.x, e.y + 11 * s, 13 * s, 5 * s, 0, 0, 6.28); c.stroke(); }
