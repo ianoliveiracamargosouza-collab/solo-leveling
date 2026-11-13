@@ -8,10 +8,10 @@ export interface SaveData {
   houses: Record<string, HouseState>; mapId: string; x: number; y: number;
   testMode: boolean; bossesDefeated: string[]; prestige: number;
 }
-const KEY = "dbtibia_save_v1";
+const KEY = "solo_leveling_shadow_monarch_save_v1";
 export function defaultSave(): SaveData {
-  return { version: 1, name: "Saiyajin", level: 1, xp: 0, gold: 50, hp: 100, ki: 100, train: { str: 0, def: 0, hp: 0, ki: 0 }, trainPoints: 0, phaseBoost: 0, senzuBeans: 0,
-    inventory: [], equipped: {}, houses: {}, mapId: "terra", x: -1, y: -1, testMode: true, bossesDefeated: [], prestige: 0 };
+  return { version: 1, name: "Sung Jin-Woo", level: 1, xp: 0, gold: 50, hp: 100, ki: 100, train: { str: 0, def: 0, hp: 0, ki: 0 }, trainPoints: 0, phaseBoost: 0, senzuBeans: 0,
+    inventory: [], equipped: {}, houses: {}, mapId: "double-dungeon", x: -1, y: -1, testMode: false, bossesDefeated: [], prestige: 0 };
 }
 export function loadSave(): SaveData {
   try { const raw = localStorage.getItem(KEY); if (raw) { const d = defaultSave(); const p = JSON.parse(raw); return { ...d, ...p, train: { ...d.train, ...(p.train ?? {}) }, houses: p.houses ?? {} }; } } catch { /* corrupt save */ }
