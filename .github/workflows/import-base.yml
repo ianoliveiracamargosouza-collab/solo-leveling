@@ -21,10 +21,10 @@ jobs:
         with:
           repository: ianoliveiracamargosouza-collab/dragon-ball-multiverse
           ref: main
-          path: /tmp/original
+          path: original
       - name: Copy project files
         run: |
-          rsync -a --delete --exclude='.git' --exclude='.github/workflows/import-base.yml' /tmp/original/ ./
+          rsync -a --delete --exclude='.git' --exclude='.github/workflows/import-base.yml' original/ ./
       - name: Commit imported project
         run: |
           git config user.name "github-actions[bot]"
